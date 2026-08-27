@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Base-12" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-180.png" />
+  <title>Base-12 Calculator</title>
+  <style>
+    @font-face {
+      font-family: 'Kaktovik';
+      src: url(data:font/truetype;charset=utf-8;base64,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) format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: block;
+    }
+    :root {
+      --bg: #141416;
+      --gold: #e8c547;
+      --gold-dark: #b8922a;
+      --gold-light: #f5e08a;
+      --text: #f5f5f7;
+      --muted: #8e8e93;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+    html, body {
+      height: 100%; overflow: hidden; background: #0f0f10; color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: calc(var(--safe-top) + 8px) 12px calc(var(--safe-bottom) + 8px);
+      min-height: 100dvh;
+      background: linear-gradient(165deg, #222 0%, #121214 55%, #1a1a1c 100%);
+    }
+    .calculator {
+      width: 100%; max-width: 390px;
+      background: linear-gradient(145deg, #2d2d32 0%, #1c1c20 100%);
+      border-radius: 28px; padding: 14px 14px 16px; position: relative;
+      box-shadow: 0 20px 50px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.05), inset 0 1px 0 rgba(255,255,255,.08);
+    }
+    .calculator::before {
+      content: ""; position: absolute; inset: 0; border-radius: 28px; padding: 1.5px;
+      background: linear-gradient(145deg, #d4af37 0%, #8a7020 45%, #c9a227 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+    }
+    .brand {
+      text-align: center; font-size: 10px; font-weight: 650; letter-spacing: .2em;
+      color: var(--gold); text-transform: uppercase; margin-bottom: 10px; opacity: .9;
+    }
+    .display {
+      background: linear-gradient(180deg, #151518 0%, #0c0c0e 100%);
+      border-radius: 16px; padding: 10px 14px 12px; margin-bottom: 12px; min-height: 148px;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      box-shadow: inset 0 3px 10px rgba(0,0,0,.6), 0 0 0 1.5px #c9a227;
+      cursor: pointer; user-select: none; -webkit-user-select: none;
+    }
+    .tape {
+      min-height: 16px; max-height: 18px; overflow: hidden;
+      font-size: 12px; color: #6e6e73; text-align: right; line-height: 1.3;
+      font-family: 'Kaktovik', ui-monospace, monospace; white-space: nowrap;
+    }
+    .expression {
+      font-size: 14px; color: var(--muted); text-align: right; min-height: 20px;
+      font-family: 'Kaktovik', monospace; margin: 2px 0 4px;
+    }
+    .expression .op { font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: var(--gold); margin: 0 3px; }
+    .main-display {
+      font-size: 40px; font-weight: 500; text-align: right;
+      font-family: 'Kaktovik', monospace; line-height: 1.4; letter-spacing: .04em;
+      color: #fff; white-space: nowrap; overflow: hidden; padding-top: 6px;
+    }
+    .readouts { display: flex; justify-content: flex-end; gap: 12px; margin-top: 4px; }
+    .ascii12 { font-size: 12px; color: #c9a227; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .decimal-eq { font-size: 12px; color: var(--muted); }
+    .mode {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 0 0 10px;
+      background: #161618; border-radius: 12px; padding: 3px; border: 1px solid #3a3a40;
+    }
+    .mode button {
+      height: 32px; border: 0; border-radius: 9px; background: transparent;
+      color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .08em;
+    }
+    .mode button.on {
+      background: linear-gradient(160deg, var(--gold-light), var(--gold) 45%, var(--gold-dark));
+      color: #1a1200;
+    }
+    .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    button {
+      appearance: none; border: none; border-radius: 13px; height: 52px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 500; color: #fff; cursor: pointer;
+      user-select: none; -webkit-user-select: none;
+      transition: transform .08s;
+    }
+    button:active { transform: scale(.94); }
+    button.digit {
+      background: linear-gradient(160deg, #3e3e46, #2c2c32);
+      box-shadow: 0 3px 0 #1a1a1e, 0 4px 8px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.1);
+      border: 1.5px solid #c9a227; font-family: 'Kaktovik', monospace; font-size: 26px;
+    }
+    button.op {
+      background: linear-gradient(160deg, var(--gold-light), var(--gold) 45%, var(--gold-dark));
+      color: #1a1200; font-weight: 700; font-size: 22px;
+      box-shadow: 0 3px 0 #7a5f18, 0 4px 10px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.45);
+    }
+    button.op.active { filter: brightness(1.12); }
+    button.fn {
+      background: linear-gradient(160deg, #4a4a52, #35353c);
+      color: #d0d0d5; font-size: 16px; font-weight: 650;
+      box-shadow: 0 3px 0 #1f1f24, 0 3px 6px rgba(0,0,0,.35);
+      border: 1px solid #55555c;
+    }
+    button.fn.has-mem::after {
+      content: ""; position: absolute; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--gold); top: 8px; right: 10px;
+    }
+    button.fn { position: relative; }
+    button.equals {
+      background: linear-gradient(160deg, var(--gold-light), var(--gold) 40%, var(--gold-dark));
+      color: #1a1200; font-weight: 700; font-size: 26px;
+      box-shadow: 0 3px 0 #7a5f18, 0 4px 12px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.45);
+    }
+    button.clear { color: #ff6b6b; }
+    @media (orientation: landscape) and (max-height: 500px) {
+      .calculator { padding: 8px 10px; max-width: 640px; }
+      .display { min-height: 88px; padding: 6px 12px; }
+      .main-display { font-size: 28px; }
+      button { height: 40px; }
+      .tape { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <div class="brand">Base-12 · Kaktovik</div>
+    <div class="display" id="displayBox">
+      <div class="tape" id="tape"></div>
+      <div class="expression" id="expression"></div>
+      <div class="main-display" id="display">𝋀</div>
+      <div class="readouts">
+        <div class="ascii12" id="ascii12">0<sub>12</sub></div>
+        <div class="decimal-eq" id="decimal">= 0<sub>10</sub></div>
+      </div>
+    </div>
+    <div class="mode">
+      <button type="button" id="modeBasic" class="on">BASIC</button>
+      <button type="button" id="modeAdv">ADV</button>
+    </div>
+    <div class="keypad">
+      <button class="fn" data-action="lparen">(</button>
+      <button class="fn" data-action="rparen">)</button>
+      <button class="fn" data-action="inv">1/x</button>
+      <button class="fn" id="memBtn" data-action="mem">M+</button>
+
+      <button class="digit" data-digit="3">𝋅</button>
+      <button class="digit" data-digit="6">𝋊</button>
+      <button class="digit" data-digit="9">𝋏</button>
+      <button class="op" id="op1" data-op="+">+</button>
+
+      <button class="digit" data-digit="4">𝋆</button>
+      <button class="digit" data-digit="7">𝋋</button>
+      <button class="digit" data-digit="A">𝋐</button>
+      <button class="op" id="op2" data-op="−">−</button>
+
+      <button class="digit" data-digit="5">𝋇</button>
+      <button class="digit" data-digit="8">𝋌</button>
+      <button class="digit" data-digit="B">𝋑</button>
+      <button class="op" id="op3" data-op="×">×</button>
+
+      <button class="digit" data-digit="0">𝋀</button>
+      <button class="digit" data-digit="1">𝋁</button>
+      <button class="digit" data-digit="2">𝋂</button>
+      <button class="op" id="op4" data-op="÷">÷</button>
+
+      <button class="fn" data-action="dot">.</button>
+      <button class="fn" data-action="sign">+/−</button>
+      <button class="fn" data-action="backspace">DEL</button>
+      <button class="equals" data-action="equals">=</button>
+    </div>
+  </div>
+  <script>
+    const KAK = ['𝋀','𝋁','𝋂','𝋅','𝋆','𝋇','𝋊','𝋋','𝋌','𝋏','𝋐','𝋑'];
+    const DIGIT_CHARS = '0123456789AB';
+    const TAU = 2 * Math.PI;
+    const HUNDRED12 = 144;
+
+    let current = '0', previous = null, operator = null, fresh = true, expression = '';
+    let advancedOps = false, memory = 0, undoEntry = null;
+    const tapeLines = [];
+    const parenStack = [];
+
+    const displayEl = document.getElementById('display');
+    const expressionEl = document.getElementById('expression');
+    const decimalEl = document.getElementById('decimal');
+    const ascii12El = document.getElementById('ascii12');
+    const tapeEl = document.getElementById('tape');
+    const memBtn = document.getElementById('memBtn');
+    const opButtons = [
+      document.getElementById('op1'),
+      document.getElementById('op2'),
+      document.getElementById('op3'),
+      document.getElementById('op4')
+    ];
+
+    function toKaktovik(str) {
+      if (str === 'Error') return 'Error';
+      return String(str).replace(/[0-9A-B]/g, ch => KAK[DIGIT_CHARS.indexOf(ch)] || ch);
+    }
+    function parseBase12(str) {
+      if (!str || str === '-' || str === 'Error') return 0;
+      const neg = str.startsWith('-');
+      if (neg) str = str.slice(1);
+      const eIdx = str.toLowerCase().indexOf('e');
+      let exp12 = 0;
+      if (eIdx >= 0) {
+        const expStr = str.slice(eIdx + 1);
+        str = str.slice(0, eIdx);
+        let e = 0, esign = 1, es = expStr;
+        if (es.startsWith('-')) { esign = -1; es = es.slice(1); }
+        for (const ch of es) {
+          const d = DIGIT_CHARS.indexOf(ch);
+          if (d >= 0) e = e * 12 + d;
+        }
+        exp12 = esign * e;
+      }
+      const [intPart = '0', fracPart = ''] = str.split('.');
+      let val = 0;
+      for (const ch of intPart) {
+        const d = DIGIT_CHARS.indexOf(ch);
+        if (d >= 0) val = val * 12 + d;
+      }
+      let place = 1 / 12;
+      for (const ch of fracPart) {
+        const d = DIGIT_CHARS.indexOf(ch);
+        if (d >= 0) { val += d * place; place /= 12; }
+      }
+      if (exp12) val *= Math.pow(12, exp12);
+      return neg ? -val : val;
+    }
+    function toBase12Plain(num, maxFrac) {
+      const neg = num < 0;
+      num = Math.abs(num);
+      let intPart = Math.floor(num + 1e-12);
+      let frac = num - intPart;
+      let intStr = '';
+      if (intPart === 0) intStr = '0';
+      else {
+        while (intPart > 0) {
+          intStr = DIGIT_CHARS[intPart % 12] + intStr;
+          intPart = Math.floor(intPart / 12);
+        }
+      }
+      let fracStr = '';
+      if (frac > 1e-12) {
+        fracStr = '.';
+        for (let i = 0; i < maxFrac && frac > 1e-12; i++) {
+          frac *= 12;
+          const digit = Math.min(11, Math.floor(frac + 1e-12));
+          fracStr += DIGIT_CHARS[digit];
+          frac -= digit;
+        }
+        fracStr = fracStr.replace(/0+$/, '');
+        if (fracStr === '.') fracStr = '';
+      }
+      return (neg ? '-' : '') + intStr + fracStr;
+    }
+    function toBase12(num, maxFrac = 6) {
+      if (!isFinite(num)) return 'Error';
+      if (Math.abs(num) < 1e-15) return '0';
+      const MAX_DIGITS = 8;
+      const abs = Math.abs(num);
+      const exp10 = Math.log(abs) / Math.log(12);
+      const exp = Math.floor(exp10 + 1e-12);
+      if (exp >= MAX_DIGITS || exp <= -MAX_DIGITS) {
+        const mant = abs / Math.pow(12, exp);
+        let mStr = toBase12Plain(mant, 4).replace(/^-/, '');
+        if (mStr.indexOf('.') === -1 && mStr.length > 1) {
+          mStr = mStr[0] + '.' + mStr.slice(1);
+        }
+        let eAbs = Math.abs(exp);
+        let eStr = '';
+        if (eAbs === 0) eStr = '0';
+        else {
+          while (eAbs > 0) {
+            eStr = DIGIT_CHARS[eAbs % 12] + eStr;
+            eAbs = Math.floor(eAbs / 12);
+          }
+        }
+        return (num < 0 ? '-' : '') + mStr + 'e' + (exp < 0 ? '-' : '') + eStr;
+      }
+      return toBase12Plain(num, maxFrac);
+    }
+    function formatDecimal(n) {
+      if (!isFinite(n)) return 'Error';
+      if (Math.abs(n) < 1e-10) return '0';
+      if (Math.abs(n) >= 1e12 || (Math.abs(n) < 1e-6 && n !== 0)) {
+        return n.toExponential(4).replace('e+', 'e');
+      }
+      if (Number.isInteger(n) || Math.abs(n - Math.round(n)) < 1e-9) return Math.round(n).toLocaleString('en-US');
+      return n.toLocaleString('en-US', { maximumFractionDigits: 6 });
+    }
+    function opSymbol(op) {
+      if (op === 'sqrt') return '√';
+      if (op === '%') return 'mod';
+      return op;
+    }
+    function pushTape(html) {
+      if (!html) return;
+      tapeEl.innerHTML = html;
+    }
+    function updateDisplay() {
+      const text = toKaktovik(current);
+      displayEl.textContent = text;
+      const len = text.length;
+      let size = 40;
+      if (len > 8) size = 32;
+      if (len > 11) size = 28;
+      if (len > 13) size = 24;
+      if (len > 15) size = 20;
+      displayEl.style.fontSize = size + 'px';
+      ascii12El.innerHTML = current + '<sub>12</sub>';
+      decimalEl.innerHTML = '= ' + formatDecimal(parseBase12(current)) + '<sub>10</sub>';
+      expressionEl.innerHTML = expression;
+      memBtn.classList.toggle('has-mem', memory !== 0);
+    }
+    function inputDigit(d) {
+      undoEntry = null;
+      if (d === '.') {
+        if (fresh) { current = '0.'; fresh = false; }
+        else if (!current.includes('.')) current += '.';
+        updateDisplay(); return;
+      }
+      if (fresh) { current = d; fresh = false; }
+      else if (current === '0') current = d;
+      else if (current === '-0') current = '-' + d;
+      else if (current.replace('-','').replace('.','').length < 10) current += d;
+      updateDisplay();
+    }
+    function setOpMode(advanced) {
+      advancedOps = advanced;
+      document.getElementById('modeBasic').classList.toggle('on', !advanced);
+      document.getElementById('modeAdv').classList.toggle('on', advanced);
+      if (advanced) {
+        opButtons[0].textContent = 'mod'; opButtons[0].dataset.op = '%';
+        opButtons[1].textContent = '√';   opButtons[1].dataset.op = 'sqrt';
+        opButtons[2].textContent = '^';   opButtons[2].dataset.op = '^';
+        opButtons[3].textContent = 'τ';   opButtons[3].dataset.op = 'tau';
+        memBtn.textContent = 'MR'; memBtn.dataset.action = 'mr';
+      } else {
+        opButtons[0].textContent = '+'; opButtons[0].dataset.op = '+';
+        opButtons[1].textContent = '−'; opButtons[1].dataset.op = '−';
+        opButtons[2].textContent = '×'; opButtons[2].dataset.op = '×';
+        opButtons[3].textContent = '÷'; opButtons[3].dataset.op = '÷';
+        memBtn.textContent = 'M+'; memBtn.dataset.action = 'mem';
+      }
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+    }
+    function compute(a, op, b) {
+      switch (op) {
+        case '+': return a + b;
+        case '−': return a - b;
+        case '×': return a * b;
+        case '÷': return b === 0 ? NaN : a / b;
+        case '^': return Math.pow(a, b);
+        case '%': return b === 0 ? NaN : a % b;
+        default: return b;
+      }
+    }
+    function applyUnary(fn) {
+      const val = parseBase12(current);
+      const g = toKaktovik(current);
+      if (fn === 'sqrt') {
+        if (val < 0) { current = 'Error'; expression = '<span class="op">√</span>' + g + ' ='; }
+        else { current = toBase12(Math.sqrt(val)); expression = '<span class="op">√</span>' + g + ' ='; }
+      } else if (fn === 'inv') {
+        if (val === 0) current = 'Error';
+        else current = toBase12(1 / val);
+        expression = '1/<span class="op"></span>' + g + ' =';
+      } else return;
+      pushTape(expression + ' ' + toKaktovik(current));
+      previous = null; operator = null; fresh = true;
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+      updateDisplay();
+    }
+    function insertTau() {
+      const val = parseBase12(current);
+      if (current === '0' || current === '-0' || current === '') {
+        expression = '<span class="op">τ</span> =';
+        current = toBase12(TAU);
+      } else {
+        expression = toKaktovik(current) + ' <span class="op">× τ</span> =';
+        current = toBase12(val * TAU);
+      }
+      pushTape(expression + ' ' + toKaktovik(current));
+      previous = null; operator = null; fresh = true;
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+      updateDisplay();
+    }
+    function applyPercent() {
+      undoEntry = { current, previous, operator, expression, fresh };
+      const val = parseBase12(current);
+      const curGlyphs = toKaktovik(current);
+      if (previous !== null && operator && operator !== '%') {
+        const base = previous;
+        let result;
+        if (operator === '+' || operator === '−') {
+          const pct = base * val / HUNDRED12;
+          result = operator === '+' ? base + pct : base - pct;
+        } else result = compute(base, operator, val / HUNDRED12);
+        expression = toKaktovik(toBase12(base)) + ' <span class="op">' + opSymbol(operator) + '</span> ' + curGlyphs + '<span class="op">%</span> =';
+        current = toBase12(result);
+      } else {
+        expression = curGlyphs + '<span class="op">%</span> =';
+        current = toBase12(val / HUNDRED12);
+      }
+      previous = null; operator = null; fresh = true;
+      pushTape(expression + ' ' + toKaktovik(current));
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+      updateDisplay();
+    }
+    function setOperator(op) {
+      if (op === 'sqrt') { applyUnary('sqrt'); return; }
+      if (op === 'tau') { insertTau(); return; }
+      const val = parseBase12(current);
+      if (previous !== null && operator && !fresh) {
+        const result = compute(previous, operator, val);
+        previous = result;
+        current = toBase12(result);
+        expression = toKaktovik(toBase12(result)) + ' <span class="op">' + opSymbol(op) + '</span> ';
+      } else {
+        previous = val;
+        expression = toKaktovik(current) + ' <span class="op">' + opSymbol(op) + '</span> ';
+      }
+      operator = op; fresh = true;
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+      const btn = document.querySelector('button[data-op="' + op + '"]');
+      if (btn) btn.classList.add('active');
+      updateDisplay();
+    }
+    function equals() {
+      if (operator === null || previous === null) return;
+      const val = parseBase12(current);
+      const result = compute(previous, operator, val);
+      expression = toKaktovik(toBase12(previous)) + ' <span class="op">' + opSymbol(operator) + '</span> ' + toKaktovik(current) + ' =';
+      current = toBase12(result);
+      pushTape(expression + ' ' + toKaktovik(current));
+      previous = null; operator = null; fresh = true;
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+      updateDisplay();
+    }
+    function backspace() {
+      if (operator !== null && previous !== null && fresh) {
+        current = toBase12(previous);
+        previous = null; operator = null; expression = ''; fresh = false; undoEntry = null;
+        document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+        updateDisplay(); return;
+      }
+      if (undoEntry) {
+        ({ current, previous, operator, expression, fresh } = undoEntry);
+        undoEntry = null;
+        document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+        updateDisplay(); return;
+      }
+      if (fresh) return;
+      if (current.length <= 1 || (current.length === 2 && current.startsWith('-'))) {
+        current = '0'; fresh = true;
+      } else current = current.slice(0, -1);
+      updateDisplay();
+    }
+    function toggleSign() {
+      if (current === '0' || current === 'Error') return;
+      current = current.startsWith('-') ? current.slice(1) : '-' + current;
+      updateDisplay();
+    }
+    function openParen() {
+      parenStack.push({ previous, operator, expression });
+      expression = (expression || '') + '(';
+      previous = null; operator = null; current = '0'; fresh = true;
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+      updateDisplay();
+    }
+    function closeParen() {
+      if (!parenStack.length) return;
+      if (operator && previous !== null && !fresh) {
+        current = toBase12(compute(previous, operator, parseBase12(current)));
+      }
+      const innerGlyphs = toKaktovik(current);
+      const ctx = parenStack.pop();
+      previous = ctx.previous;
+      operator = ctx.operator;
+      expression = (ctx.expression || '') + '(' + innerGlyphs + ')';
+      fresh = true;
+      updateDisplay();
+    }
+    function memoryAdd() {
+      memory += parseBase12(current);
+      memBtn.classList.toggle('has-mem', memory !== 0);
+    }
+    function memoryRecall() {
+      current = toBase12(memory);
+      fresh = false;
+      updateDisplay();
+    }
+    function memoryClear() {
+      memory = 0;
+      memBtn.classList.remove('has-mem');
+    }
+
+    document.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn._skipClick) { btn._skipClick = false; return; }
+        if (btn.dataset.digit !== undefined) inputDigit(btn.dataset.digit);
+        else if (btn.dataset.op) setOperator(btn.dataset.op);
+        else if (btn.dataset.action === 'equals') equals();
+        else if (btn.dataset.action === 'backspace') backspace();
+        else if (btn.dataset.action === 'sign') toggleSign();
+        else if (btn.dataset.action === 'dot') inputDigit('.');
+        else if (btn.dataset.action === 'inv') applyUnary('inv');
+        else if (btn.dataset.action === 'lparen') openParen();
+        else if (btn.dataset.action === 'rparen') closeParen();
+        else if (btn.dataset.action === 'mem') memoryAdd();
+        else if (btn.dataset.action === 'mr') memoryRecall();
+      });
+    });
+    document.getElementById('modeBasic').addEventListener('click', () => setOpMode(false));
+    document.getElementById('modeAdv').addEventListener('click', () => setOpMode(true));
+
+    document.addEventListener('keydown', e => {
+      const key = e.key;
+      if (/[0-9]/.test(key)) inputDigit(key);
+      else if (key === 'a' || key === 'A') inputDigit('A');
+      else if (key === 'b' || key === 'B') inputDigit('B');
+      else if (key === '.') inputDigit('.');
+      else if (key === '+') setOperator('+');
+      else if (key === '-') setOperator('−');
+      else if (key === '*' || key === 'x') setOperator('×');
+      else if (key === '/') setOperator('÷');
+      else if (key === '%') setOperator('%');
+      else if (key === '^') setOperator('^');
+      else if (key === '(') openParen();
+      else if (key === ')') closeParen();
+      else if (key === 'Enter' || key === '=') equals();
+      else if (key === 'Escape' || key === 'c' || key === 'C') {
+        current = '0'; previous = null; operator = null; expression = ''; fresh = true; undoEntry = null;
+        document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+        updateDisplay();
+      }
+      else if (key === 'Backspace') backspace();
+    });
+
+    (function () {
+      const box = document.getElementById('displayBox');
+      let startY = null, startT = 0;
+      box.addEventListener('touchstart', e => {
+        if (e.touches.length === 1) { startY = e.touches[0].clientY; startT = Date.now(); }
+      }, { passive: true });
+      box.addEventListener('touchend', e => {
+        if (startY === null) return;
+        const dy = startY - e.changedTouches[0].clientY;
+        const dt = Date.now() - startT;
+        startY = null;
+        if (dy > 40 && dt < 600) { setOpMode(!advancedOps); return; }
+        if (Math.abs(dy) < 12 && dt < 300) inputDigit('.');
+      }, { passive: true });
+      box.addEventListener('click', e => { if (e.detail) inputDigit('.'); });
+    })();
+
+    (function () {
+      const btn = document.getElementById('op1');
+      let timer = null;
+      function start() {
+        if (!advancedOps || btn.dataset.op !== '%') return;
+        timer = setTimeout(() => { timer = null; btn._skipClick = true; applyPercent(); }, 450);
+      }
+      function cancel() { if (timer) { clearTimeout(timer); timer = null; } }
+      btn.addEventListener('touchstart', start, { passive: true });
+      btn.addEventListener('mousedown', start);
+      ['touchend','touchcancel','mouseup','mouseleave'].forEach(ev => btn.addEventListener(ev, cancel));
+    })();
+
+    (function () {
+      const btn = document.querySelector("[data-action=backspace]");
+      let timer = null;
+      function start() {
+        timer = setTimeout(() => {
+          timer = null; btn._skipClick = true;
+          current = "0"; previous = null; operator = null; expression = ""; fresh = true; undoEntry = null;
+          document.querySelectorAll("button.op").forEach(b => b.classList.remove("active"));
+          updateDisplay();
+        }, 500);
+      }
+      function cancel() { if (timer) { clearTimeout(timer); timer = null; } }
+      btn.addEventListener("touchstart", start, { passive: true });
+      btn.addEventListener("mousedown", start);
+      ["touchend","touchcancel","mouseup","mouseleave"].forEach(ev => btn.addEventListener(ev, cancel));
+    })();
+
+    (function () {
+      const btn = memBtn;
+      let timer = null;
+      function start() {
+        timer = setTimeout(() => {
+          timer = null; btn._skipClick = true;
+          if (advancedOps) memoryClear();
+          else memoryRecall();
+        }, 450);
+      }
+      function cancel() { if (timer) { clearTimeout(timer); timer = null; } }
+      btn.addEventListener('touchstart', start, { passive: true });
+      btn.addEventListener('mousedown', start);
+      ['touchend','touchcancel','mouseup','mouseleave'].forEach(ev => btn.addEventListener(ev, cancel));
+    })();
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+    updateDisplay();
+  </script>
+</body>
+</html>
