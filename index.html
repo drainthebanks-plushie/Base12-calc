@@ -197,6 +197,7 @@
 
     let current = '0', previous = null, operator = null, fresh = true, expression = '';
     let advancedOps = false, memory = 0, undoEntry = null;
+    let groupedCurrent = false, powerBaseGrouped = false;
     const tapeLines = [];
     const parenStack = [];
 
@@ -336,6 +337,7 @@
     }
     function inputDigit(d) {
       undoEntry = null;
+      groupedCurrent = false;
       if (d === '.') {
         if (fresh) { current = '0.'; fresh = false; }
         else if (!current.includes('.')) current += '.';
@@ -372,7 +374,9 @@
         case '−': return a - b;
         case '×': return a * b;
         case '÷': return b === 0 ? NaN : a / b;
-        case '^': return Math.pow(a, b);
+        case '^':
+          if (a < 0 && !powerBaseGrouped) return -Math.pow(Math.abs(a), b);
+          return Math.pow(a, b);
         case '%': return b === 0 ? NaN : a % b;
         default: return b;
       }
@@ -432,6 +436,7 @@
     function setOperator(op) {
       if (op === 'sqrt') { applyUnary('sqrt'); return; }
       if (op === 'tau') { insertTau(); return; }
+      if (op === '^') powerBaseGrouped = groupedCurrent;
       const val = parseBase12(current);
       if (previous !== null && operator && !fresh) {
         const result = compute(previous, operator, val);
@@ -440,7 +445,11 @@
         expression = toKaktovik(toBase12(result)) + ' <span class="op">' + opSymbol(op) + '</span> ';
       } else {
         previous = val;
-        expression = toKaktovik(current) + ' <span class="op">' + opSymbol(op) + '</span> ';
+        if (groupedCurrent && expression && expression.indexOf('(') !== -1) {
+          expression = expression + ' <span class="op">' + opSymbol(op) + '</span> ';
+        } else {
+          expression = toKaktovik(current) + ' <span class="op">' + opSymbol(op) + '</span> ';
+        }
       }
       operator = op; fresh = true;
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
@@ -452,7 +461,10 @@
       if (operator === null || previous === null) return;
       const val = parseBase12(current);
       const result = compute(previous, operator, val);
-      expression = toKaktovik(toBase12(previous)) + ' <span class="op">' + opSymbol(operator) + '</span> ' + toKaktovik(current) + ' =';
+      const left = (expression && expression.indexOf('(') !== -1)
+        ? expression.replace(/\s*<span class="op">[^<]*<\/span>\s*$/, '')
+        : toKaktovik(toBase12(previous));
+      expression = left + ' <span class="op">' + opSymbol(operator) + '</span> ' + toKaktovik(current) + ' =';
       current = toBase12(result);
       pushTape(expression + ' ' + toKaktovik(current));
       previous = null; operator = null; fresh = true;
@@ -500,6 +512,7 @@
       previous = ctx.previous;
       operator = ctx.operator;
       expression = (ctx.expression || '') + '(' + innerGlyphs + ')';
+      groupedCurrent = true;
       fresh = true;
       updateDisplay();
     }
