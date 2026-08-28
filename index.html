@@ -96,6 +96,23 @@
       color: #1a1200;
     }
     .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .numpad {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .calculator.adv .numpad {
+      grid-template-columns: 1fr 1fr 1fr 1.1fr 1.1fr;
+    }
+    .side-op { display: none; }
+    .calculator.adv .side-op { display: flex; font-size: 20px; }
+    .calculator.adv button.op { font-size: 16px; }
+    button.op.dual {
+      flex-direction: column; gap: 0; line-height: 1.05; padding: 4px 0;
+    }
+    button.op.dual .k-main { font-size: 13px; font-weight: 800; }
+    button.op.dual .k-sub { font-size: 11px; font-weight: 700; opacity: .72; }
     button {
       appearance: none; border: none; border-radius: 13px; height: 52px;
       display: flex; align-items: center; justify-content: center;
@@ -163,25 +180,31 @@
       <button class="fn" data-action="inv">1/x</button>
       <button class="fn" id="memBtn" data-action="mem">M+</button>
 
-      <button class="digit" data-digit="3">𝋅</button>
-      <button class="digit" data-digit="6">𝋊</button>
-      <button class="digit" data-digit="9">𝋏</button>
-      <button class="op" id="op1" data-op="+">+</button>
+      <div class="numpad" id="numpad">
+        <button class="digit" data-digit="3">𝋅</button>
+        <button class="digit" data-digit="6">𝋊</button>
+        <button class="digit" data-digit="9">𝋏</button>
+        <button class="op side-op" data-op="+">+</button>
+        <button class="op" id="op1" data-op="+">+</button>
 
-      <button class="digit" data-digit="4">𝋆</button>
-      <button class="digit" data-digit="7">𝋋</button>
-      <button class="digit" data-digit="A">𝋐</button>
-      <button class="op" id="op2" data-op="−">−</button>
+        <button class="digit" data-digit="4">𝋆</button>
+        <button class="digit" data-digit="7">𝋋</button>
+        <button class="digit" data-digit="A">𝋐</button>
+        <button class="op side-op" data-op="−">−</button>
+        <button class="op" id="op2" data-op="−">−</button>
 
-      <button class="digit" data-digit="5">𝋇</button>
-      <button class="digit" data-digit="8">𝋌</button>
-      <button class="digit" data-digit="B">𝋑</button>
-      <button class="op" id="op3" data-op="×">×</button>
+        <button class="digit" data-digit="5">𝋇</button>
+        <button class="digit" data-digit="8">𝋌</button>
+        <button class="digit" data-digit="B">𝋑</button>
+        <button class="op side-op" data-op="×">×</button>
+        <button class="op" id="op3" data-op="×">×</button>
 
-      <button class="digit" data-digit="0">𝋀</button>
-      <button class="digit" data-digit="1">𝋁</button>
-      <button class="digit" data-digit="2">𝋂</button>
-      <button class="op" id="op4" data-op="÷">÷</button>
+        <button class="digit" data-digit="0">𝋀</button>
+        <button class="digit" data-digit="1">𝋁</button>
+        <button class="digit" data-digit="2">𝋂</button>
+        <button class="op side-op" data-op="÷">÷</button>
+        <button class="op" id="op4" data-op="÷">÷</button>
+      </div>
 
       <button class="fn" data-action="dot">.</button>
       <button class="fn" data-action="sign">+/−</button>
@@ -351,15 +374,19 @@
     }
     function setOpMode(advanced) {
       advancedOps = advanced;
+      document.querySelector('.calculator').classList.toggle('adv', advanced);
       document.getElementById('modeBasic').classList.toggle('on', !advanced);
       document.getElementById('modeAdv').classList.toggle('on', advanced);
       if (advanced) {
-        opButtons[0].textContent = 'mod'; opButtons[0].dataset.op = '%';
+        opButtons[0].classList.add('dual');
+        opButtons[0].innerHTML = '<span class="k-main">mod</span><span class="k-sub">%</span>';
+        opButtons[0].dataset.op = '%';
         opButtons[1].textContent = '√';   opButtons[1].dataset.op = 'sqrt';
         opButtons[2].textContent = '^';   opButtons[2].dataset.op = '^';
         opButtons[3].textContent = 'τ';   opButtons[3].dataset.op = 'tau';
         memBtn.textContent = 'MR'; memBtn.dataset.action = 'mr';
       } else {
+        opButtons[0].classList.remove('dual');
         opButtons[0].textContent = '+'; opButtons[0].dataset.op = '+';
         opButtons[1].textContent = '−'; opButtons[1].dataset.op = '−';
         opButtons[2].textContent = '×'; opButtons[2].dataset.op = '×';
