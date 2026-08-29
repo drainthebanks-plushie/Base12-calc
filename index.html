@@ -221,6 +221,8 @@
     let current = '0', previous = null, operator = null, fresh = true, expression = '';
     let advancedOps = false, memory = 0, undoEntry = null;
     let groupedCurrent = false, powerBaseGrouped = false;
+    let tokens = [];
+    let justEvaluated = false;
     const tapeLines = [];
     const parenStack = [];
 
@@ -358,18 +360,100 @@
       expressionEl.innerHTML = expression;
       memBtn.classList.toggle('has-mem', memory !== 0);
     }
+    function tokenGlyph(tok) {
+      if ('+−×÷^%()'.indexOf(tok) !== -1 || tok === 'τ' || tok === '√') {
+        if (tok === '%') return '<span class="op">mod</span>';
+        if ('+−×÷^'.indexOf(tok) !== -1) return '<span class="op">' + tok + '</span>';
+        if (tok === 'τ' || tok === '√') return '<span class="op">' + tok + '</span>';
+        return tok;
+      }
+      return toKaktovik(tok);
+    }
+    function renderTokens() {
+      const parts = tokens.map(tokenGlyph);
+      if (!fresh && current && current !== '') parts.push(toKaktovik(current));
+      else if (tokens.length === 0) parts.push(toKaktovik(current));
+      return parts.join(' ');
+    }
+    function flushNumber() {
+      if (!fresh && current !== '' && current !== 'Error') {
+        tokens.push(current);
+        fresh = true;
+      }
+    }
+    function lastTok() { return tokens.length ? tokens[tokens.length - 1] : ''; }
+    function isOpTok(t) { return t === '+' || t === '−' || t === '×' || t === '÷' || t === '^' || t === '%'; }
+    function implicitMul() {
+      const last = lastTok();
+      if (last === ')' || last === 'τ' || (last && !isOpTok(last) && last !== '(')) tokens.push('×');
+    }
+    function evalExpr(src) {
+      const list = [];
+      for (let i = 0; i < src.length; i++) {
+        if (src[i] === '(') {
+          let depth = 1, j = i + 1;
+          while (j < src.length && depth) {
+            if (src[j] === '(') depth++;
+            else if (src[j] === ')') depth--;
+            j++;
+          }
+          list.push({ v: evalExpr(src.slice(i + 1, j - 1)), g: true });
+          i = j - 1;
+        } else if (src[i] === 'τ') list.push({ v: TAU, g: true });
+        else if (isOpTok(src[i])) list.push(src[i]);
+        else list.push({ v: parseBase12(src[i]), g: false });
+      }
+      const prec = { '^': 3, '×': 2, '÷': 2, '%': 2, '+': 1, '−': 1 };
+      const right = { '^': true };
+      const out = [], ops = [];
+      for (const t of list) {
+        if (typeof t === 'object') out.push(t);
+        else {
+          while (ops.length) {
+            const top = ops[ops.length - 1];
+            if ((!right[t] && prec[top] >= prec[t]) || (right[t] && prec[top] > prec[t])) out.push(ops.pop());
+            else break;
+          }
+          ops.push(t);
+        }
+      }
+      while (ops.length) out.push(ops.pop());
+      const st = [];
+      for (const t of out) {
+        if (typeof t === 'object') st.push(t);
+        else {
+          const b = st.pop(), a = st.pop();
+          if (!a || !b) return NaN;
+          const old = powerBaseGrouped;
+          powerBaseGrouped = !!a.g;
+          const v = compute(a.v, t, b.v);
+          powerBaseGrouped = old;
+          st.push({ v: v, g: false });
+        }
+      }
+      return st.length ? st[0].v : 0;
+    }
     function inputDigit(d) {
       undoEntry = null;
       groupedCurrent = false;
+      if (justEvaluated) {
+        tokens = [];
+        expression = '';
+        current = '0';
+        justEvaluated = false;
+        fresh = true;
+      }
       if (d === '.') {
         if (fresh) { current = '0.'; fresh = false; }
         else if (!current.includes('.')) current += '.';
+        expression = renderTokens();
         updateDisplay(); return;
       }
       if (fresh) { current = d; fresh = false; }
       else if (current === '0') current = d;
       else if (current === '-0') current = '-' + d;
       else if (current.replace('-','').replace('.','').length < 10) current += d;
+      expression = renderTokens();
       updateDisplay();
     }
     function setOpMode(advanced) {
@@ -425,16 +509,21 @@
       updateDisplay();
     }
     function insertTau() {
-      const val = parseBase12(current);
-      if (current === '0' || current === '-0' || current === '') {
-        expression = '<span class="op">τ</span> =';
-        current = toBase12(TAU);
-      } else {
-        expression = toKaktovik(current) + ' <span class="op">× τ</span> =';
-        current = toBase12(val * TAU);
+      if (justEvaluated) {
+        tokens = [];
+        justEvaluated = false;
+        fresh = true;
+        current = '0';
       }
-      pushTape(expression + ' ' + toKaktovik(current));
-      previous = null; operator = null; fresh = true;
+      if (!fresh && current !== '0' && current !== '-0') {
+        flushNumber();
+        tokens.push('×');
+      }
+      implicitMul();
+      tokens.push('τ');
+      current = '0';
+      fresh = true;
+      expression = renderTokens();
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
       updateDisplay();
     }
@@ -463,84 +552,88 @@
     function setOperator(op) {
       if (op === 'sqrt') { applyUnary('sqrt'); return; }
       if (op === 'tau') { insertTau(); return; }
-      if (op === '^') powerBaseGrouped = groupedCurrent;
-      const val = parseBase12(current);
-      if (previous !== null && operator && !fresh) {
-        const result = compute(previous, operator, val);
-        previous = result;
-        current = toBase12(result);
-        expression = toKaktovik(toBase12(result)) + ' <span class="op">' + opSymbol(op) + '</span> ';
-      } else {
-        previous = val;
-        if (groupedCurrent && expression && expression.indexOf('(') !== -1) {
-          expression = expression + ' <span class="op">' + opSymbol(op) + '</span> ';
-        } else {
-          expression = toKaktovik(current) + ' <span class="op">' + opSymbol(op) + '</span> ';
-        }
+      if (justEvaluated) {
+        tokens = [current];
+        justEvaluated = false;
       }
-      operator = op; fresh = true;
+      flushNumber();
+      if (isOpTok(lastTok())) tokens[tokens.length - 1] = op;
+      else tokens.push(op);
+      operator = op;
+      current = '0';
+      fresh = true;
+      expression = renderTokens();
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
       const btn = document.querySelector('button[data-op="' + op + '"]');
       if (btn) btn.classList.add('active');
       updateDisplay();
     }
     function equals() {
-      if (operator === null || previous === null) return;
-      const val = parseBase12(current);
-      const result = compute(previous, operator, val);
-      const left = (expression && expression.indexOf('(') !== -1)
-        ? expression.replace(/\s*<span class="op">[^<]*<\/span>\s*$/, '')
-        : toKaktovik(toBase12(previous));
-      expression = left + ' <span class="op">' + opSymbol(operator) + '</span> ' + toKaktovik(current) + ' =';
+      if (justEvaluated && tokens.length === 0) return;
+      flushNumber();
+      if (!tokens.length) return;
+      const shown = renderTokens();
+      const result = evalExpr(tokens);
       current = toBase12(result);
+      expression = shown + ' =';
       pushTape(expression + ' ' + toKaktovik(current));
-      previous = null; operator = null; fresh = true;
+      tokens = [];
+      previous = null; operator = null; fresh = true; justEvaluated = true;
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
       updateDisplay();
     }
     function backspace() {
-      if (operator !== null && previous !== null && fresh) {
-        current = toBase12(previous);
-        previous = null; operator = null; expression = ''; fresh = false; undoEntry = null;
-        document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+      if (!fresh && current.length) {
+        if (current.length <= 1 || (current.length === 2 && current.startsWith('-'))) {
+          current = '0'; fresh = true;
+        } else current = current.slice(0, -1);
+        expression = renderTokens();
         updateDisplay(); return;
       }
-      if (undoEntry) {
-        ({ current, previous, operator, expression, fresh } = undoEntry);
-        undoEntry = null;
+      if (tokens.length) {
+        const t = tokens.pop();
+        if (!isOpTok(t) && t !== '(' && t !== ')' && t !== 'τ') {
+          current = t; fresh = false;
+        } else {
+          current = '0'; fresh = true;
+        }
+        expression = renderTokens();
         document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
-        updateDisplay(); return;
+        updateDisplay();
       }
-      if (fresh) return;
-      if (current.length <= 1 || (current.length === 2 && current.startsWith('-'))) {
-        current = '0'; fresh = true;
-      } else current = current.slice(0, -1);
-      updateDisplay();
     }
     function toggleSign() {
-      if (current === '0' || current === 'Error') return;
-      current = current.startsWith('-') ? current.slice(1) : '-' + current;
+      if (current === 'Error') return;
+      if (justEvaluated) { tokens = []; justEvaluated = false; }
+      if (current.startsWith('-')) current = current.slice(1) || '0';
+      else current = current === '0' ? '-0' : '-' + current;
+      if (current === '-0') fresh = false;
+      expression = renderTokens();
       updateDisplay();
     }
     function openParen() {
-      parenStack.push({ previous, operator, expression });
-      expression = (expression || '') + '(';
-      previous = null; operator = null; current = '0'; fresh = true;
+      if (justEvaluated) {
+        tokens = [];
+        current = '0';
+        justEvaluated = false;
+        fresh = true;
+      }
+      flushNumber();
+      implicitMul();
+      tokens.push('(');
+      current = '0';
+      fresh = true;
+      expression = renderTokens();
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
       updateDisplay();
     }
     function closeParen() {
-      if (!parenStack.length) return;
-      if (operator && previous !== null && !fresh) {
-        current = toBase12(compute(previous, operator, parseBase12(current)));
-      }
-      const innerGlyphs = toKaktovik(current);
-      const ctx = parenStack.pop();
-      previous = ctx.previous;
-      operator = ctx.operator;
-      expression = (ctx.expression || '') + '(' + innerGlyphs + ')';
+      flushNumber();
+      tokens.push(')');
       groupedCurrent = true;
+      current = '0';
       fresh = true;
+      expression = renderTokens();
       updateDisplay();
     }
     function memoryAdd() {
@@ -592,7 +685,7 @@
       else if (key === ')') closeParen();
       else if (key === 'Enter' || key === '=') equals();
       else if (key === 'Escape' || key === 'c' || key === 'C') {
-        current = '0'; previous = null; operator = null; expression = ''; fresh = true; undoEntry = null;
+        current = '0'; previous = null; operator = null; expression = ''; fresh = true; undoEntry = null; tokens = []; justEvaluated = false;
         document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
         updateDisplay();
       }
@@ -635,7 +728,7 @@
       function start() {
         timer = setTimeout(() => {
           timer = null; btn._skipClick = true;
-          current = "0"; previous = null; operator = null; expression = ""; fresh = true; undoEntry = null;
+          current = "0"; previous = null; operator = null; expression = ""; fresh = true; undoEntry = null; tokens = []; justEvaluated = false;
           document.querySelectorAll("button.op").forEach(b => b.classList.remove("active"));
           updateDisplay();
         }, 500);
