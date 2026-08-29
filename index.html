@@ -80,7 +80,9 @@
       font-family: 'Kaktovik', monospace; line-height: 1.4; letter-spacing: .04em;
       color: #fff; white-space: nowrap; overflow: hidden; padding-top: 6px;
     }
-    .readouts { display: flex; justify-content: flex-end; gap: 12px; margin-top: 4px; }
+    .readouts { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 4px; }
+    .mem-flag { margin-right: auto; font-size: 11px; font-weight: 800; color: #c9a227; letter-spacing: .08em; opacity: 0; }
+    .mem-flag.on { opacity: 1; }
     .ascii12 { font-size: 12px; color: #c9a227; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     .decimal-eq { font-size: 12px; color: var(--muted); }
     .mode {
@@ -171,6 +173,7 @@
       <div class="expression" id="expression"></div>
       <div class="main-display" id="display">𝋀</div>
       <div class="readouts">
+        <div class="mem-flag" id="memFlag">M</div>
         <div class="ascii12" id="ascii12">0<sub>12</sub></div>
         <div class="decimal-eq" id="decimal">= 0<sub>10</sub></div>
       </div>
@@ -234,6 +237,7 @@
     let tokens = [];
     let justEvaluated = false;
     let phonePad = false;
+    let rightShown = false;
     const tapeLines = [];
     const parenStack = [];
 
@@ -368,8 +372,10 @@
       displayEl.style.fontSize = size + 'px';
       ascii12El.innerHTML = current + '<sub>12</sub>';
       decimalEl.innerHTML = '= ' + formatDecimal(parseBase12(current)) + '<sub>10</sub>';
-      expressionEl.innerHTML = expression;
+      expressionEl.innerHTML = expression || renderTokens();
       memBtn.classList.toggle('has-mem', memory !== 0);
+      const flag = document.getElementById('memFlag');
+      if (flag) flag.classList.toggle('on', memory !== 0);
     }
     function tokenGlyph(tok) {
       if ('+−×÷^%()'.indexOf(tok) !== -1 || tok === 'τ' || tok === 'π' || tok === '√') {
@@ -382,7 +388,8 @@
     }
     function renderTokens() {
       const parts = tokens.map(tokenGlyph);
-      if (!fresh && current && current !== '') parts.push(toKaktovik(current));
+      if (isOpTok(lastTok()) && rightShown && current && current !== '') parts.push(toKaktovik(current));
+      else if (!fresh && current && current !== '') parts.push(toKaktovik(current));
       else if (tokens.length === 0) parts.push(toKaktovik(current));
       return parts.join(' ');
     }
@@ -448,13 +455,15 @@
     function inputDigit(d) {
       undoEntry = null;
       groupedCurrent = false;
-      if (justEvaluated) {
+      if (justEvaluated && !operator && tokens.length === 0) {
         tokens = [];
         expression = '';
         current = '0';
         justEvaluated = false;
         fresh = true;
       }
+      justEvaluated = false;
+      rightShown = true;
       if (d === '.') {
         if (fresh) { current = '0.'; fresh = false; }
         else if (!current.includes('.')) current += '.';
@@ -604,16 +613,19 @@
     function setOperator(op) {
       if (op === 'sqrt') { applyUnary('sqrt'); return; }
       if (op === 'tau') { insertTau(); return; }
-      if (justEvaluated) {
-        tokens = [current];
-        justEvaluated = false;
+      justEvaluated = false;
+      const leftVal = parseBase12(current);
+      if (tokens.length === 0) {
+        tokens = [(current && current !== 'Error') ? current : '0'];
+      } else {
+        flushNumber();
       }
-      flushNumber();
       if (isOpTok(lastTok())) tokens[tokens.length - 1] = op;
       else tokens.push(op);
+      previous = leftVal;
       operator = op;
-      current = '0';
       fresh = true;
+      rightShown = false;
       expression = renderTokens();
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
       const btn = document.querySelector('button[data-op="' + op + '"]');
@@ -621,13 +633,19 @@
       updateDisplay();
     }
     function equals() {
-      if (justEvaluated && tokens.length === 0) return;
+      const rightVal = parseBase12(current);
       flushNumber();
-      if (!tokens.length) return;
-      const shown = renderTokens();
-      const result = evalExpr(tokens);
-      current = toBase12(result);
-      expression = shown + ' =';
+      let result;
+      if (tokens.length >= 3) result = evalExpr(tokens);
+      else if (operator && previous !== null) result = compute(previous, operator, rightVal);
+      else result = rightVal;
+      if (!isFinite(result)) {
+        current = 'Error';
+      } else {
+        current = toBase12(result);
+      }
+      const shown = expression || renderTokens();
+      expression = (shown || toKaktovik(toBase12(result))) + (shown.indexOf('=') >= 0 ? '' : ' =');
       pushTape(expression + ' ' + toKaktovik(current));
       tokens = [];
       previous = null; operator = null; fresh = true; justEvaluated = true;
@@ -690,27 +708,32 @@
     }
     function memoryAdd() {
       memory += parseBase12(current);
-      memBtn.classList.toggle('has-mem', memory !== 0);
+      updateDisplay();
     }
     function memoryRecall() {
       current = toBase12(memory);
-      fresh = false;
-      justEvaluated = false;
+      fresh = true;
+      justEvaluated = !operator;
+      if (!operator) tokens = [];
+      rightShown = !!operator;
       expression = renderTokens();
       updateDisplay();
     }
     function memoryClear() {
       memory = 0;
-      memBtn.classList.remove('has-mem');
+      updateDisplay();
     }
     function memorySub() {
       memory -= parseBase12(current);
-      memBtn.classList.toggle('has-mem', memory !== 0);
+      updateDisplay();
     }
 
     document.querySelectorAll('button').forEach(btn => {
       btn.addEventListener('click', () => {
-        if (btn._skipClick) { btn._skipClick = false; return; }
+        if (btn._skipClick || (btn._ignoreClicksUntil && Date.now() < btn._ignoreClicksUntil)) {
+          btn._skipClick = false;
+          return;
+        }
         if (btn.dataset.digit !== undefined) inputDigit(btn.dataset.digit);
         else if (btn.dataset.op) setOperator(btn.dataset.op);
         else if (btn.dataset.action === 'equals') equals();
@@ -783,76 +806,43 @@
       box.addEventListener('mouseleave', clearHold);
     })();
 
-    (function () {
-      const btn = document.getElementById('op4');
-      let timer = null;
-      function start() {
-        if (!advancedOps || btn.dataset.op !== 'tau') return;
-        timer = setTimeout(() => { timer = null; btn._skipClick = true; insertPi(); }, 450);
-      }
-      function cancel() { if (timer) { clearTimeout(timer); timer = null; } }
-      btn.addEventListener('touchstart', start, { passive: true });
-      btn.addEventListener('mousedown', start);
-      ['touchend','touchcancel','mouseup','mouseleave'].forEach(ev => btn.addEventListener(ev, cancel));
-    })();
-
-    (function () {
-      const btn = document.getElementById('op1');
-      let timer = null;
-      function start() {
-        if (!advancedOps || btn.dataset.op !== '%') return;
-        timer = setTimeout(() => { timer = null; btn._skipClick = true; applyPercent(); }, 450);
-      }
-      function cancel() { if (timer) { clearTimeout(timer); timer = null; } }
-      btn.addEventListener('touchstart', start, { passive: true });
-      btn.addEventListener('mousedown', start);
-      ['touchend','touchcancel','mouseup','mouseleave'].forEach(ev => btn.addEventListener(ev, cancel));
-    })();
-
-    (function () {
-      const btn = document.querySelector("[data-action=backspace]");
-      let timer = null;
-      function start() {
-        timer = setTimeout(() => {
-          timer = null; btn._skipClick = true;
-          current = "0"; previous = null; operator = null; expression = ""; fresh = true; undoEntry = null; tokens = []; justEvaluated = false;
-          document.querySelectorAll("button.op").forEach(b => b.classList.remove("active"));
-          updateDisplay();
-        }, 500);
-      }
-      function cancel() { if (timer) { clearTimeout(timer); timer = null; } }
-      btn.addEventListener("touchstart", start, { passive: true });
-      btn.addEventListener("mousedown", start);
-      ["touchend","touchcancel","mouseup","mouseleave"].forEach(ev => btn.addEventListener(ev, cancel));
-    })();
-
-    (function () {
-      const btn = memBtn;
-      let timer = null;
-      function start() {
-        timer = setTimeout(() => {
-          timer = null; btn._skipClick = true;
-          memoryRecall();
-        }, 450);
-      }
-      function cancel() { if (timer) { clearTimeout(timer); timer = null; } }
-      btn.addEventListener('touchstart', start, { passive: true });
-      btn.addEventListener('mousedown', start);
-      ['touchend','touchcancel','mouseup','mouseleave'].forEach(ev => btn.addEventListener(ev, cancel));
-    })();
-
-    (function () {
-      const btn = document.getElementById('memClearBtn');
+    function bindLongPress(btn, fn, ms) {
       if (!btn) return;
-      let timer = null;
-      function start() {
-        timer = setTimeout(() => { timer = null; btn._skipClick = true; memorySub(); }, 450);
+      let timer = null, touch = false;
+      function start(e) {
+        if (e.type === 'mousedown' && touch) return;
+        if (e.type === 'touchstart') touch = true;
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => {
+          timer = null;
+          btn._skipClick = true;
+          btn._ignoreClicksUntil = Date.now() + 700;
+          fn();
+        }, ms);
       }
-      function cancel() { if (timer) { clearTimeout(timer); timer = null; } }
+      function cancel() {
+        if (timer) { clearTimeout(timer); timer = null; }
+        setTimeout(() => { touch = false; }, 500);
+      }
       btn.addEventListener('touchstart', start, { passive: true });
       btn.addEventListener('mousedown', start);
-      ['touchend','touchcancel','mouseup','mouseleave'].forEach(ev => btn.addEventListener(ev, cancel));
-    })();
+      btn.addEventListener('touchend', cancel, { passive: true });
+      btn.addEventListener('touchcancel', cancel, { passive: true });
+      btn.addEventListener('mouseup', cancel);
+    }
+    bindLongPress(document.getElementById('op4'), () => {
+      if (advancedOps && document.getElementById('op4').dataset.op === 'tau') insertPi();
+    }, 450);
+    bindLongPress(document.getElementById('op1'), () => {
+      if (advancedOps && document.getElementById('op1').dataset.op === '%') applyPercent();
+    }, 450);
+    bindLongPress(document.querySelector('[data-action=backspace]'), () => {
+      current = '0'; previous = null; operator = null; expression = ''; fresh = true; undoEntry = null; tokens = []; justEvaluated = false;
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+      updateDisplay();
+    }, 500);
+    bindLongPress(memBtn, memoryRecall, 450);
+    bindLongPress(document.getElementById('memClearBtn'), memorySub, 450);
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
