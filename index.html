@@ -633,22 +633,30 @@
       updateDisplay();
     }
     function equals() {
-      const rightVal = parseBase12(current);
+      const rightStr = (current && current !== 'Error') ? current : '0';
+      const rightVal = parseBase12(rightStr);
+      const leftVal = previous;
+      const op = operator;
       flushNumber();
+      if (isOpTok(lastTok())) tokens.push(rightStr);
       let result;
       if (tokens.length >= 3) result = evalExpr(tokens);
-      else if (operator && previous !== null) result = compute(previous, operator, rightVal);
+      else if (op && leftVal !== null) result = compute(leftVal, op, rightVal);
       else result = rightVal;
-      if (!isFinite(result)) {
-        current = 'Error';
+      if (!isFinite(result)) current = 'Error';
+      else current = toBase12(result);
+      if (tokens.length) {
+        expression = tokens.map(tokenGlyph).join(' ') + ' =';
+      } else if (op && leftVal !== null) {
+        expression = toKaktovik(toBase12(leftVal)) +
+          ' <span class="op">' + opSymbol(op) + '</span> ' +
+          toKaktovik(rightStr) + ' =';
       } else {
-        current = toBase12(result);
+        expression = toKaktovik(rightStr) + ' =';
       }
-      const shown = expression || renderTokens();
-      expression = (shown || toKaktovik(toBase12(result))) + (shown.indexOf('=') >= 0 ? '' : ' =');
       pushTape(expression + ' ' + toKaktovik(current));
       tokens = [];
-      previous = null; operator = null; fresh = true; justEvaluated = true;
+      previous = null; operator = null; fresh = true; justEvaluated = true; rightShown = false;
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
       updateDisplay();
     }
@@ -699,10 +707,22 @@
     }
     function closeParen() {
       flushNumber();
-      tokens.push(')');
+      if (lastTok() !== ')') tokens.push(')');
       groupedCurrent = true;
-      current = '0';
+      let depth = 0, start = -1;
+      for (let i = tokens.length - 1; i >= 0; i--) {
+        if (tokens[i] === ')') depth++;
+        else if (tokens[i] === '(') {
+          depth--;
+          if (depth === 0) { start = i; break; }
+        }
+      }
+      if (start >= 0) {
+        const inner = evalExpr(tokens.slice(start + 1, tokens.length - 1));
+        if (isFinite(inner)) current = toBase12(inner);
+      }
       fresh = true;
+      rightShown = false;
       expression = renderTokens();
       updateDisplay();
     }
