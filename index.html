@@ -208,7 +208,7 @@
 
       <button class="fn" data-action="dot">.</button>
       <button class="fn" data-action="sign">+/−</button>
-      <button class="fn" data-action="backspace">DEL</button>
+      <button class="fn" data-action="backspace" style="flex-direction:column;font-size:12px;line-height:1.15;font-weight:700">DEL / AC</button>
       <button class="equals" data-action="equals">=</button>
     </div>
   </div>
@@ -361,10 +361,10 @@
       memBtn.classList.toggle('has-mem', memory !== 0);
     }
     function tokenGlyph(tok) {
-      if ('+−×÷^%()'.indexOf(tok) !== -1 || tok === 'τ' || tok === '√') {
+      if ('+−×÷^%()'.indexOf(tok) !== -1 || tok === 'τ' || tok === 'π' || tok === '√') {
         if (tok === '%') return '<span class="op">mod</span>';
         if ('+−×÷^'.indexOf(tok) !== -1) return '<span class="op">' + tok + '</span>';
-        if (tok === 'τ' || tok === '√') return '<span class="op">' + tok + '</span>';
+        if (tok === 'τ' || tok === 'π' || tok === '√') return '<span class="op">' + tok + '</span>';
         return tok;
       }
       return toKaktovik(tok);
@@ -385,7 +385,7 @@
     function isOpTok(t) { return t === '+' || t === '−' || t === '×' || t === '÷' || t === '^' || t === '%'; }
     function implicitMul() {
       const last = lastTok();
-      if (last === ')' || last === 'τ' || (last && !isOpTok(last) && last !== '(')) tokens.push('×');
+      if (last === ')' || last === 'τ' || last === 'π' || (last && !isOpTok(last) && last !== '(')) tokens.push('×');
     }
     function evalExpr(src) {
       const list = [];
@@ -400,6 +400,7 @@
           list.push({ v: evalExpr(src.slice(i + 1, j - 1)), g: true });
           i = j - 1;
         } else if (src[i] === 'τ') list.push({ v: TAU, g: true });
+        else if (src[i] === 'π') list.push({ v: Math.PI, g: true });
         else if (isOpTok(src[i])) list.push(src[i]);
         else list.push({ v: parseBase12(src[i]), g: false });
       }
@@ -467,10 +468,13 @@
         opButtons[0].dataset.op = '%';
         opButtons[1].textContent = '√';   opButtons[1].dataset.op = 'sqrt';
         opButtons[2].textContent = '^';   opButtons[2].dataset.op = '^';
-        opButtons[3].textContent = 'τ';   opButtons[3].dataset.op = 'tau';
+        opButtons[3].classList.add('dual');
+        opButtons[3].innerHTML = '<span class="k-main">Tau</span><span class="k-sub">π</span>';
+        opButtons[3].dataset.op = 'tau';
         memBtn.textContent = 'MR'; memBtn.dataset.action = 'mr';
       } else {
         opButtons[0].classList.remove('dual');
+        opButtons[3].classList.remove('dual');
         opButtons[0].textContent = '+'; opButtons[0].dataset.op = '+';
         opButtons[1].textContent = '−'; opButtons[1].dataset.op = '−';
         opButtons[2].textContent = '×'; opButtons[2].dataset.op = '×';
@@ -521,6 +525,25 @@
       }
       implicitMul();
       tokens.push('τ');
+      current = '0';
+      fresh = true;
+      expression = renderTokens();
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+      updateDisplay();
+    }
+    function insertPi() {
+      if (justEvaluated) {
+        tokens = [];
+        justEvaluated = false;
+        fresh = true;
+        current = '0';
+      }
+      if (!fresh && current !== '0' && current !== '-0') {
+        flushNumber();
+        tokens.push('×');
+      }
+      implicitMul();
+      tokens.push('π');
       current = '0';
       fresh = true;
       expression = renderTokens();
@@ -707,6 +730,19 @@
         if (Math.abs(dy) < 12 && dt < 300) inputDigit('.');
       }, { passive: true });
       box.addEventListener('click', e => { if (e.detail) inputDigit('.'); });
+    })();
+
+    (function () {
+      const btn = document.getElementById('op4');
+      let timer = null;
+      function start() {
+        if (!advancedOps || btn.dataset.op !== 'tau') return;
+        timer = setTimeout(() => { timer = null; btn._skipClick = true; insertPi(); }, 450);
+      }
+      function cancel() { if (timer) { clearTimeout(timer); timer = null; } }
+      btn.addEventListener('touchstart', start, { passive: true });
+      btn.addEventListener('mousedown', start);
+      ['touchend','touchcancel','mouseup','mouseleave'].forEach(ev => btn.addEventListener(ev, cancel));
     })();
 
     (function () {
