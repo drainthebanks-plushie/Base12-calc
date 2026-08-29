@@ -96,23 +96,28 @@
       color: #1a1200;
     }
     .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .numpad {
+    .fun-row, .bot-row, .numpad {
       grid-column: 1 / -1;
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 8px;
     }
-    .calculator.adv .numpad {
+    .calculator.adv .fun-row,
+    .calculator.adv .numpad,
+    .calculator.adv .bot-row {
       grid-template-columns: 1fr 1fr 1fr 1.1fr 1.1fr;
     }
+    .mem-extra { display: none; }
+    .calculator.adv .mem-extra { display: flex; }
+    .calculator.adv .equals { grid-column: span 2; }
     .side-op { display: none; }
     .calculator.adv .side-op { display: flex; font-size: 20px; }
     .calculator.adv button.op { font-size: 16px; }
-    button.op.dual {
+    button.dual {
       flex-direction: column; gap: 0; line-height: 1.05; padding: 4px 0;
     }
-    button.op.dual .k-main { font-size: 13px; font-weight: 800; }
-    button.op.dual .k-sub { font-size: 11px; font-weight: 700; opacity: .72; }
+    button.dual .k-main { font-size: 13px; font-weight: 800; }
+    button.dual .k-sub { font-size: 11px; font-weight: 700; opacity: .72; }
     button {
       appearance: none; border: none; border-radius: 13px; height: 52px;
       display: flex; align-items: center; justify-content: center;
@@ -175,10 +180,13 @@
       <button type="button" id="modeAdv">ADV</button>
     </div>
     <div class="keypad">
-      <button class="fn" data-action="lparen">(</button>
-      <button class="fn" data-action="rparen">)</button>
-      <button class="fn" data-action="inv">1/x</button>
-      <button class="fn" id="memBtn" data-action="mem">M+</button>
+      <div class="fun-row">
+        <button class="fn" data-action="lparen">(</button>
+        <button class="fn" data-action="rparen">)</button>
+        <button class="fn" data-action="inv">1/x</button>
+        <button class="fn dual has-mem-host" id="memBtn" data-action="mem"><span class="k-main">M+</span><span class="k-sub">MR</span></button>
+        <button class="fn dual mem-extra" id="memClearBtn" data-action="mc"><span class="k-main">MC</span><span class="k-sub">M−</span></button>
+      </div>
 
       <div class="numpad" id="numpad">
         <button class="digit" data-digit="3">𝋅</button>
@@ -206,10 +214,12 @@
         <button class="op" id="op4" data-op="÷">÷</button>
       </div>
 
-      <button class="fn" data-action="dot">.</button>
-      <button class="fn" data-action="sign">+/−</button>
-      <button class="fn" data-action="backspace" style="flex-direction:column;font-size:12px;line-height:1.15;font-weight:700">DEL / AC</button>
-      <button class="equals" data-action="equals">=</button>
+      <div class="bot-row">
+        <button class="fn" data-action="dot">.</button>
+        <button class="fn" data-action="sign">+/−</button>
+        <button class="fn dual" data-action="backspace"><span class="k-main">DEL</span><span class="k-sub">AC</span></button>
+        <button class="equals" data-action="equals">=</button>
+      </div>
     </div>
   </div>
   <script>
@@ -471,7 +481,6 @@
         opButtons[3].classList.add('dual');
         opButtons[3].innerHTML = '<span class="k-main">Tau</span><span class="k-sub">π</span>';
         opButtons[3].dataset.op = 'tau';
-        memBtn.textContent = 'MR'; memBtn.dataset.action = 'mr';
       } else {
         opButtons[0].classList.remove('dual');
         opButtons[3].classList.remove('dual');
@@ -479,7 +488,6 @@
         opButtons[1].textContent = '−'; opButtons[1].dataset.op = '−';
         opButtons[2].textContent = '×'; opButtons[2].dataset.op = '×';
         opButtons[3].textContent = '÷'; opButtons[3].dataset.op = '÷';
-        memBtn.textContent = 'M+'; memBtn.dataset.action = 'mem';
       }
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
     }
@@ -666,11 +674,17 @@
     function memoryRecall() {
       current = toBase12(memory);
       fresh = false;
+      justEvaluated = false;
+      expression = renderTokens();
       updateDisplay();
     }
     function memoryClear() {
       memory = 0;
       memBtn.classList.remove('has-mem');
+    }
+    function memorySub() {
+      memory -= parseBase12(current);
+      memBtn.classList.toggle('has-mem', memory !== 0);
     }
 
     document.querySelectorAll('button').forEach(btn => {
@@ -687,6 +701,8 @@
         else if (btn.dataset.action === 'rparen') closeParen();
         else if (btn.dataset.action === 'mem') memoryAdd();
         else if (btn.dataset.action === 'mr') memoryRecall();
+        else if (btn.dataset.action === 'mc') memoryClear();
+        else if (btn.dataset.action === 'mminus') memorySub();
       });
     });
     document.getElementById('modeBasic').addEventListener('click', () => setOpMode(false));
@@ -781,9 +797,21 @@
       function start() {
         timer = setTimeout(() => {
           timer = null; btn._skipClick = true;
-          if (advancedOps) memoryClear();
-          else memoryRecall();
+          memoryRecall();
         }, 450);
+      }
+      function cancel() { if (timer) { clearTimeout(timer); timer = null; } }
+      btn.addEventListener('touchstart', start, { passive: true });
+      btn.addEventListener('mousedown', start);
+      ['touchend','touchcancel','mouseup','mouseleave'].forEach(ev => btn.addEventListener(ev, cancel));
+    })();
+
+    (function () {
+      const btn = document.getElementById('memClearBtn');
+      if (!btn) return;
+      let timer = null;
+      function start() {
+        timer = setTimeout(() => { timer = null; btn._skipClick = true; memorySub(); }, 450);
       }
       function cancel() { if (timer) { clearTimeout(timer); timer = null; } }
       btn.addEventListener('touchstart', start, { passive: true });
