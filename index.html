@@ -401,9 +401,10 @@
     }
     function lastTok() { return tokens.length ? tokens[tokens.length - 1] : ''; }
     function isOpTok(t) { return t === '+' || t === '−' || t === '×' || t === '÷' || t === '^' || t === '%'; }
+    function isConstTok(t) { return t === 'π' || t === 'τ'; }
     function implicitMul() {
       const last = lastTok();
-      if (last === ')' || last === 'τ' || last === 'π' || (last && !isOpTok(last) && last !== '(')) tokens.push('×');
+      if (last === ')' || isConstTok(last) || (last && !isOpTok(last) && last !== '(')) tokens.push('×');
     }
     function evalExpr(src) {
       const list = [];
@@ -464,6 +465,11 @@
       }
       justEvaluated = false;
       rightShown = true;
+      if (isConstTok(lastTok()) && (fresh || current === '0' || current === '-0')) {
+        tokens.push('^');
+        operator = '^';
+        previous = lastTok() === 'π' ? Math.PI : TAU;
+      }
       if (d === '.') {
         if (fresh) { current = '0.'; fresh = false; }
         else if (!current.includes('.')) current += '.';
@@ -550,44 +556,30 @@
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
       updateDisplay();
     }
-    function insertTau() {
-      if (justEvaluated) {
+    function insertConst(name) {
+      if (justEvaluated && !operator && tokens.length === 0) {
         tokens = [];
-        justEvaluated = false;
-        fresh = true;
         current = '0';
+        fresh = true;
       }
-      if (!fresh && current !== '0' && current !== '-0') {
+      justEvaluated = false;
+      if (!fresh && current !== '0' && current !== '-0' && current !== '') {
         flushNumber();
         tokens.push('×');
+      } else {
+        implicitMul();
       }
-      implicitMul();
-      tokens.push('τ');
+      tokens.push(name);
       current = '0';
       fresh = true;
+      rightShown = false;
+      operator = null;
       expression = renderTokens();
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
       updateDisplay();
     }
-    function insertPi() {
-      if (justEvaluated) {
-        tokens = [];
-        justEvaluated = false;
-        fresh = true;
-        current = '0';
-      }
-      if (!fresh && current !== '0' && current !== '-0') {
-        flushNumber();
-        tokens.push('×');
-      }
-      implicitMul();
-      tokens.push('π');
-      current = '0';
-      fresh = true;
-      expression = renderTokens();
-      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
-      updateDisplay();
-    }
+    function insertTau() { insertConst('τ'); }
+    function insertPi() { insertConst('π'); }
     function applyPercent() {
       undoEntry = { current, previous, operator, expression, fresh };
       const val = parseBase12(current);
@@ -638,9 +630,9 @@
       const leftVal = previous;
       const op = operator;
       flushNumber();
-      if (isOpTok(lastTok())) tokens.push(rightStr);
+      if (isOpTok(lastTok()) && !(fresh && (rightStr === '0' || rightStr === '-0'))) tokens.push(rightStr);
       let result;
-      if (tokens.length >= 3) result = evalExpr(tokens);
+      if (tokens.length) result = evalExpr(tokens);
       else if (op && leftVal !== null) result = compute(leftVal, op, rightVal);
       else result = rightVal;
       if (!isFinite(result)) current = 'Error';
