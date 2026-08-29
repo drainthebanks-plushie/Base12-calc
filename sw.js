@@ -1,4 +1,4 @@
-const CACHE = "base12-kaktovik-v19";
+const CACHE = "base12-kaktovik-v20";
 const ASSETS = [
   "./",
   "./index.html",
