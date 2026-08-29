@@ -189,27 +189,27 @@
       </div>
 
       <div class="numpad" id="numpad">
-        <button class="digit" data-digit="3">𝋅</button>
-        <button class="digit" data-digit="6">𝋊</button>
-        <button class="digit" data-digit="9">𝋏</button>
+        <button class="digit" data-bars="3" data-phone="7" data-digit="3">𝋅</button>
+        <button class="digit" data-bars="6" data-phone="8" data-digit="6">𝋊</button>
+        <button class="digit" data-bars="9" data-phone="9" data-digit="9">𝋏</button>
         <button class="op side-op" data-op="+">+</button>
         <button class="op" id="op1" data-op="+">+</button>
 
-        <button class="digit" data-digit="4">𝋆</button>
-        <button class="digit" data-digit="7">𝋋</button>
-        <button class="digit" data-digit="A">𝋐</button>
+        <button class="digit" data-bars="4" data-phone="4" data-digit="4">𝋆</button>
+        <button class="digit" data-bars="7" data-phone="5" data-digit="7">𝋋</button>
+        <button class="digit" data-bars="A" data-phone="6" data-digit="A">𝋐</button>
         <button class="op side-op" data-op="−">−</button>
         <button class="op" id="op2" data-op="−">−</button>
 
-        <button class="digit" data-digit="5">𝋇</button>
-        <button class="digit" data-digit="8">𝋌</button>
-        <button class="digit" data-digit="B">𝋑</button>
+        <button class="digit" data-bars="5" data-phone="1" data-digit="5">𝋇</button>
+        <button class="digit" data-bars="8" data-phone="2" data-digit="8">𝋌</button>
+        <button class="digit" data-bars="B" data-phone="3" data-digit="B">𝋑</button>
         <button class="op side-op" data-op="×">×</button>
         <button class="op" id="op3" data-op="×">×</button>
 
-        <button class="digit" data-digit="0">𝋀</button>
-        <button class="digit" data-digit="1">𝋁</button>
-        <button class="digit" data-digit="2">𝋂</button>
+        <button class="digit" data-bars="0" data-phone="A" data-digit="0">𝋀</button>
+        <button class="digit" data-bars="1" data-phone="0" data-digit="1">𝋁</button>
+        <button class="digit" data-bars="2" data-phone="B" data-digit="2">𝋂</button>
         <button class="op side-op" data-op="÷">÷</button>
         <button class="op" id="op4" data-op="÷">÷</button>
       </div>
@@ -233,6 +233,7 @@
     let groupedCurrent = false, powerBaseGrouped = false;
     let tokens = [];
     let justEvaluated = false;
+    let phonePad = false;
     const tapeLines = [];
     const parenStack = [];
 
@@ -466,6 +467,26 @@
       else if (current.replace('-','').replace('.','').length < 10) current += d;
       expression = renderTokens();
       updateDisplay();
+    }
+    function applyPadLayout() {
+      document.querySelectorAll('button.digit').forEach(btn => {
+        const val = phonePad ? btn.dataset.phone : btn.dataset.bars;
+        btn.dataset.digit = val;
+        if (phonePad) {
+          btn.textContent = val;
+          btn.style.fontFamily = '-apple-system, BlinkMacSystemFont, sans-serif';
+          btn.style.fontSize = '22px';
+        } else {
+          const i = DIGIT_CHARS.indexOf(val);
+          btn.textContent = i >= 0 ? KAK[i] : val;
+          btn.style.fontFamily = '';
+          btn.style.fontSize = '';
+        }
+      });
+    }
+    function togglePadLayout() {
+      phonePad = !phonePad;
+      applyPadLayout();
     }
     function setOpMode(advanced) {
       advancedOps = advanced;
@@ -733,19 +754,33 @@
 
     (function () {
       const box = document.getElementById('displayBox');
-      let startY = null, startT = 0;
-      box.addEventListener('touchstart', e => {
-        if (e.touches.length === 1) { startY = e.touches[0].clientY; startT = Date.now(); }
-      }, { passive: true });
-      box.addEventListener('touchend', e => {
+      let startY = null, startT = 0, holdTimer = null, switched = false;
+      function clearHold() { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } }
+      function begin(y) {
+        startY = y; startT = Date.now(); switched = false;
+        clearHold();
+        holdTimer = setTimeout(() => { holdTimer = null; switched = true; togglePadLayout(); }, 1200);
+      }
+      function move(y) {
         if (startY === null) return;
-        const dy = startY - e.changedTouches[0].clientY;
+        if (Math.abs(startY - y) > 14) clearHold();
+      }
+      function end(y) {
+        const dy = startY === null ? 0 : startY - y;
         const dt = Date.now() - startT;
+        clearHold();
         startY = null;
-        if (dy > 40 && dt < 600) { setOpMode(!advancedOps); return; }
-        if (Math.abs(dy) < 12 && dt < 300) inputDigit('.');
-      }, { passive: true });
-      box.addEventListener('click', e => { if (e.detail) inputDigit('.'); });
+        if (switched) return;
+        if (dy > 40 && dt < 600) setOpMode(!advancedOps);
+      }
+      box.addEventListener('touchstart', e => { if (e.touches.length === 1) begin(e.touches[0].clientY); }, { passive: true });
+      box.addEventListener('touchmove', e => { if (e.touches.length) move(e.touches[0].clientY); }, { passive: true });
+      box.addEventListener('touchend', e => end(e.changedTouches[0] ? e.changedTouches[0].clientY : startY), { passive: true });
+      box.addEventListener('touchcancel', clearHold, { passive: true });
+      box.addEventListener('mousedown', e => begin(e.clientY));
+      box.addEventListener('mousemove', e => { if (e.buttons) move(e.clientY); });
+      box.addEventListener('mouseup', e => end(e.clientY));
+      box.addEventListener('mouseleave', clearHold);
     })();
 
     (function () {
