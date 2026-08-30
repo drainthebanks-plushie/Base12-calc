@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Base-12" />
+  <meta name="theme-color" content="#c4b496" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-180.png" />
+  <title>Base-12 Calculator</title>
+  <style>
+    @font-face {
+      font-family: 'Kaktovik';
+      src: url(data:font/truetype;charset=utf-8;base64,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) format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: block;
+    }
+    :root {
+      --paper: #e8dcc4;
+      --paper-dark: #d4c4a8;
+      --ink: #2a2218;
+      --muted: #6b5e4e;
+      --wood: #5c3d24;
+      --wood-dark: #3a2414;
+      --brass: #b08a4a;
+      --brass-light: #d4b36a;
+      --mustard: #b39a58;
+      --sage: #7a8474;
+      --terra: #a87458;
+      --cobalt: #4a6178;
+      --ivory: #f3ead6;
+      --gold: #8a6a32;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+    html, body {
+      height: 100%; overflow: hidden; background: #c4b496; color: var(--ink);
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: calc(var(--safe-top) + 8px) 12px calc(var(--safe-bottom) + 8px);
+      min-height: 100dvh;
+      background:
+        radial-gradient(ellipse at 20% 10%, rgba(255,255,255,.25), transparent 50%),
+        repeating-linear-gradient(0deg, rgba(90,70,40,.03) 0 1px, transparent 1px 3px),
+        linear-gradient(165deg, #d7c9ab 0%, #c4b496 55%, #b7a584 100%);
+    }
+    .calculator {
+      width: 100%; max-width: 390px;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(255,255,255,.35), transparent 40%),
+        repeating-linear-gradient(0deg, rgba(90,70,40,.04) 0 1px, transparent 1px 3px),
+        repeating-linear-gradient(90deg, rgba(90,70,40,.025) 0 1px, transparent 1px 4px),
+        #ead9b8;
+      border-radius: 22px; padding: 16px 14px 18px; position: relative;
+      border: 1px solid #cbb892;
+      box-shadow:
+        0 16px 36px rgba(70,50,20,.22),
+        inset 0 1px 0 rgba(255,255,255,.55);
+    }
+    .corner-bl, .corner-br { display: none; }
+    .brand {
+      text-align: center; font-size: 11px; font-weight: 700; letter-spacing: .22em;
+      color: var(--ink); text-transform: uppercase; margin: 4px 0 12px; opacity: .9;
+    }
+    .display {
+      position: relative;
+      background: linear-gradient(180deg, #1a1814 0%, #0c0b09 100%);
+      border-radius: 8px; padding: 12px 14px 12px; margin-bottom: 12px; min-height: 158px;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      box-shadow: inset 0 3px 8px rgba(0,0,0,.55), 0 0 0 2px #8a7348;
+      cursor: pointer; user-select: none; -webkit-user-select: none;
+    }
+    .tape {
+      min-height: 22px; max-height: 26px; overflow: visible;
+      font-size: 13px; color: #9a8b72; text-align: right; line-height: 1.55;
+      font-family: 'Kaktovik', ui-monospace, monospace; white-space: nowrap;
+      padding-top: 4px;
+    }
+    .expression {
+      font-size: 14px; color: var(--muted); text-align: right; min-height: 24px;
+      font-family: 'Kaktovik', monospace; margin: 4px 0 4px; line-height: 1.55;
+      padding-top: 3px; overflow: visible; white-space: nowrap;
+    }
+    .expression .op { font-family: Palatino, "Times New Roman", serif; color: #d4b36a; margin: 0 3px; }
+    .main-display {
+      font-size: 40px; font-weight: 500; text-align: right;
+      font-family: 'Kaktovik', monospace; line-height: 1.4; letter-spacing: .04em;
+      color: #f3ead6; white-space: nowrap; overflow: hidden; padding-top: 6px;
+    }
+    .readouts { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 4px; }
+    .mem-flag {
+      position: absolute; top: 8px; left: 12px; z-index: 2;
+      font-size: 11px; font-weight: 800; color: #d4b36a; letter-spacing: .08em; opacity: 0;
+    }
+    .mem-flag.on { opacity: 1; }
+    .angle-flag {
+      margin-right: auto; font-size: 11px; font-weight: 800; color: #d4b36a;
+      letter-spacing: .08em; padding: 2px 4px; border-radius: 4px;
+    }
+    .ascii12 { font-size: 12px; color: #d4b36a; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .decimal-eq { font-size: 12px; color: var(--muted); display: none; }
+    .calculator.arabic .decimal-eq { display: inline; }
+    .mode {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 0 0 10px;
+      background: #d8c9ad; border-radius: 8px; padding: 3px; border: 1px solid #b09a74;
+    }
+    .mode button {
+      height: 32px; border: 0; border-radius: 6px; background: transparent;
+      color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .12em;
+      font-family: Palatino, "Times New Roman", serif;
+    }
+    .mode button.on {
+      background: linear-gradient(160deg, #3a2a16, #2a1c10);
+      color: #f3ead6;
+    }
+    .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .fun-row, .bot-row {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .numpad {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .num-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .calculator.adv .fun-row,
+    .calculator.adv .bot-row,
+    .calculator.adv .num-row {
+      grid-template-columns: 1fr 1fr 1fr 0.92fr 0.92fr 0.92fr;
+    }
+    .calculator.flip:not(.adv) .num-row,
+    .calculator.flip:not(.adv) .bot-row {
+      grid-template-columns: 1.1fr 1fr 1fr 1fr;
+    }
+    .calculator.flip.adv .fun-row,
+    .calculator.flip.adv .num-row,
+    .calculator.flip.adv .bot-row {
+      grid-template-columns: 0.92fr 0.92fr 0.92fr 1fr 1fr 1fr;
+    }
+    .calculator.flip .num-row .sci-op { order: 1; }
+    .calculator.flip .num-row .op:not(.side-op):not(.sci-op) { order: 2; }
+    .calculator.flip .num-row .side-op { order: 3; }
+    .calculator.flip .num-row .digit { order: 4; }
+    .calculator.flip.adv .fun-row [data-action="mem"] { order: 1; }
+    .calculator.flip.adv .fun-row [data-action="msub"] { order: 2; }
+    .calculator.flip.adv .fun-row [data-action="mr"] { order: 3; }
+    .calculator.flip.adv .fun-row [data-action="lparen"] { order: 4; }
+    .calculator.flip.adv .fun-row [data-action="rparen"] { order: 5; }
+    .calculator.flip.adv .fun-row [data-action="inv"] { order: 6; }
+    .calculator.flip .bot-row .equals { order: 1; }
+    .calculator.flip .bot-row [data-action="backspace"] { order: 2; }
+    .calculator.flip .bot-row [data-action="sign"] { order: 3; }
+    .calculator.flip .bot-row [data-action="dot"] { order: 4; }
+    .mem-extra { display: none; }
+    .calculator.adv .mem-extra { display: flex; }
+    .calculator.adv .equals { grid-column: span 3; }
+    .side-op, .sci-op { display: none; }
+    .calculator.adv .side-op,
+    .calculator.adv .sci-op { display: flex; font-size: 16px; }
+    .calculator.adv button.op { font-size: 16px; }
+    .calculator.adv button.sci-op.dual .k-main { font-size: 14px; }
+    .calculator.adv button.sci-op.dual .k-sub { font-size: 11px; }
+    button.dual {
+      flex-direction: column; gap: 0; line-height: 1.05; padding: 4px 0;
+    }
+    button.dual .k-main { font-size: 14px; font-weight: 800; }
+    button.dual .k-sub { font-size: 11px; font-weight: 800; opacity: .85; }
+    button {
+      appearance: none; border: 1px solid #c4ae86; border-radius: 10px; height: 54px;
+      background-color: #f6edd8;
+      background-image: linear-gradient(180deg, rgba(255,255,255,.38) 0%, rgba(255,255,255,0) 46%);
+      box-shadow: 0 3px 0 #c4ae86, 0 5px 8px rgba(80,60,30,.14);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 800; color: var(--ink); cursor: pointer;
+      user-select: none; -webkit-user-select: none;
+      transition: transform .08s;
+      font-family: Palatino, "Times New Roman", serif;
+    }
+    button:active { transform: translateY(2px); box-shadow: 0 1px 0 #c4ae86; }
+    button.digit {
+      background-color: #f6edd8;
+      font-family: 'Kaktovik', monospace; font-size: 24px; font-weight: 400;
+      color: #5c4a32;
+      -webkit-text-stroke: 0.45px #f6edd8;
+      text-shadow: 0.6px 0.6px 0 #8a7350;
+    }
+    .calculator.arabic button.digit {
+      color: #5c4a32;
+      -webkit-text-stroke: 0;
+      text-shadow: 0.5px 0.5px 0 #8a7350;
+    }
+    button.op {
+      background-color: var(--mustard);
+      color: #2a2218;
+      font-family: Palatino, "Times New Roman", serif;
+      font-weight: 800;
+      font-size: 16px;
+    }
+    button.op.active { filter: brightness(1.06); }
+    button.fn {
+      background-color: #f6edd8;
+      color: #5c4a32; font-size: 16px; font-weight: 800;
+    }
+    button.fn.has-mem::after {
+      content: ""; position: absolute; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--terra); top: 8px; right: 10px;
+    }
+    button.fn { position: relative; }
+    button.equals {
+      background-color: var(--terra);
+      color: #f3ead6; font-weight: 800; font-size: 16px;
+    }
+    .c-mustard, .side-op[data-op="+"],
+    .calculator.adv #op4, .calculator:not(.adv) #op1, #sciTan {
+      background-color: var(--mustard) !important; color: #2a2218 !important;
+      border: 1px solid #c4ae86 !important;
+      box-shadow: 0 3px 0 #c4ae86, 0 5px 8px rgba(80,60,30,.14) !important;
+    }
+    .c-sage, .side-op[data-op="−"],
+    .calculator.adv #op1, .calculator:not(.adv) #op2 {
+      background-color: var(--sage) !important; color: #f3ead6 !important;
+      border: 1px solid #c4ae86 !important;
+      box-shadow: 0 3px 0 #c4ae86, 0 5px 8px rgba(80,60,30,.14) !important;
+    }
+    .c-terra, .side-op[data-op="×"],
+    .calculator.adv #op2, .calculator:not(.adv) #op3,
+    #sciSin, button.equals {
+      background-color: var(--terra) !important; color: #f3ead6 !important;
+      border: 1px solid #c4ae86 !important;
+      box-shadow: 0 3px 0 #c4ae86, 0 5px 8px rgba(80,60,30,.14) !important;
+    }
+    .c-cobalt, .side-op[data-op="÷"], .calculator:not(.adv) #op4,
+    .calculator.adv #op3, #sciCos, #sciLog {
+      background-color: var(--cobalt) !important; color: #f3ead6 !important;
+      border: 1px solid #c4ae86 !important;
+      box-shadow: 0 3px 0 #c4ae86, 0 5px 8px rgba(80,60,30,.14) !important;
+    }
+    button.clear { color: #ff6b6b; }
+    @media (orientation: landscape) and (max-height: 500px) {
+      .calculator { padding: 8px 10px; max-width: 640px; }
+      .display { min-height: 88px; padding: 6px 12px; }
+      .main-display { font-size: 28px; }
+      button { height: 40px; }
+      .tape { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <span class="corner-bl"></span>
+    <span class="corner-br"></span>
+    <div class="brand">Base-12 · Kaktovik</div>
+    <div class="display" id="displayBox">
+      <div class="mem-flag" id="memFlag">M</div>
+      <div class="tape" id="tape"></div>
+      <div class="expression" id="expression"></div>
+      <div class="main-display" id="display">𝋀</div>
+      <div class="readouts">
+        <div class="angle-flag" id="angleFlag">RAD</div>
+        <div class="ascii12" id="ascii12">0<sub>12</sub></div>
+        <div class="decimal-eq" id="decimal">= 0<sub>10</sub></div>
+      </div>
+    </div>
+    <div class="mode">
+      <button type="button" id="modeBasic" class="on">BASIC</button>
+      <button type="button" id="modeAdv">ADV</button>
+    </div>
+    <div class="keypad">
+      <div class="fun-row">
+        <button class="fn" data-action="lparen">(</button>
+        <button class="fn" data-action="rparen">)</button>
+        <button class="fn" data-action="inv">1/x</button>
+        <button class="fn has-mem-host" id="memBtn" data-action="mem">M+</button>
+        <button class="fn mem-extra" id="memSubBtn" data-action="msub">M−</button>
+        <button class="fn dual mem-extra" id="memClearBtn" data-action="mr"><span class="k-main">MR</span><span class="k-sub">MC</span></button>
+      </div>
+
+      <div class="numpad" id="numpad">
+        <div class="num-row">
+          <button class="digit" data-bars="7" data-phone="7" data-digit="7">𝋋</button>
+          <button class="digit" data-bars="8" data-phone="8" data-digit="8">𝋌</button>
+          <button class="digit" data-bars="9" data-phone="9" data-digit="9">𝋏</button>
+          <button class="op side-op" data-op="+">+</button>
+          <button class="op" id="op1" data-op="+">+</button>
+          <button class="op dual sci-op" id="sciSin" data-action="sin"><span class="k-main">sin</span><span class="k-sub">asin</span></button>
+        </div>
+        <div class="num-row">
+          <button class="digit" data-bars="4" data-phone="4" data-digit="4">𝋆</button>
+          <button class="digit" data-bars="5" data-phone="5" data-digit="5">𝋇</button>
+          <button class="digit" data-bars="6" data-phone="6" data-digit="6">𝋊</button>
+          <button class="op side-op" data-op="−">−</button>
+          <button class="op" id="op2" data-op="−">−</button>
+          <button class="op dual sci-op" id="sciCos" data-action="cos"><span class="k-main">cos</span><span class="k-sub">acos</span></button>
+        </div>
+        <div class="num-row">
+          <button class="digit" data-bars="1" data-phone="1" data-digit="1">𝋁</button>
+          <button class="digit" data-bars="2" data-phone="2" data-digit="2">𝋂</button>
+          <button class="digit" data-bars="3" data-phone="3" data-digit="3">𝋅</button>
+          <button class="op side-op" data-op="×">×</button>
+          <button class="op" id="op3" data-op="×">×</button>
+          <button class="op sci-op" id="sciTan" data-action="tan">tan</button>
+        </div>
+        <div class="num-row">
+          <button class="digit" data-bars="A" data-phone="A" data-digit="A">𝋐</button>
+          <button class="digit" data-bars="0" data-phone="0" data-digit="0">𝋀</button>
+          <button class="digit" data-bars="B" data-phone="B" data-digit="B">𝋑</button>
+          <button class="op side-op" data-op="÷">÷</button>
+          <button class="op" id="op4" data-op="÷">÷</button>
+          <button class="op dual sci-op" id="sciLog" data-action="log12"><span class="k-main">log₁₂</span><span class="k-sub">ln</span></button>
+        </div>
+      </div>
+
+      <div class="bot-row">
+        <button class="fn" data-action="dot">.</button>
+        <button class="fn" data-action="sign">+/−</button>
+        <button class="fn dual" data-action="backspace"><span class="k-main">DEL</span><span class="k-sub">AC</span></button>
+        <button class="equals" data-action="equals">=</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    const KAK = ['𝋀','𝋁','𝋂','𝋅','𝋆','𝋇','𝋊','𝋋','𝋌','𝋏','𝋐','𝋑'];
+    const DIGIT_CHARS = '0123456789AB';
+    const TAU = 2 * Math.PI;
+    const HUNDRED12 = 144;
+
+    let current = '0', previous = null, operator = null, fresh = true, expression = '';
+    let advancedOps = false, memory = 0, undoEntry = null;
+    let groupedCurrent = false, powerBaseGrouped = false;
+    let tokens = [];
+    let justEvaluated = false;
+    let phonePad = false;
+    let rightShown = false;
+    let angleDeg = false;
+    const tapeLines = [];
+    const parenStack = [];
+
+    const displayEl = document.getElementById('display');
+    const expressionEl = document.getElementById('expression');
+    const decimalEl = document.getElementById('decimal');
+    const ascii12El = document.getElementById('ascii12');
+    const tapeEl = document.getElementById('tape');
+    const memBtn = document.getElementById('memBtn');
+    const opButtons = [
+      document.getElementById('op1'),
+      document.getElementById('op2'),
+      document.getElementById('op3'),
+      document.getElementById('op4')
+    ];
+
+    function toKaktovik(str) {
+      if (str === 'Error') return 'Error';
+      return String(str).replace(/[0-9A-B]/g, ch => KAK[DIGIT_CHARS.indexOf(ch)] || ch);
+    }
+    function parseBase12(str) {
+      if (!str || str === '-' || str === 'Error') return 0;
+      const neg = str.startsWith('-');
+      if (neg) str = str.slice(1);
+      const eIdx = str.toLowerCase().indexOf('e');
+      let exp12 = 0;
+      if (eIdx >= 0) {
+        const expStr = str.slice(eIdx + 1);
+        str = str.slice(0, eIdx);
+        let e = 0, esign = 1, es = expStr;
+        if (es.startsWith('-')) { esign = -1; es = es.slice(1); }
+        for (const ch of es) {
+          const d = DIGIT_CHARS.indexOf(ch);
+          if (d >= 0) e = e * 12 + d;
+        }
+        exp12 = esign * e;
+      }
+      const [intPart = '0', fracPart = ''] = str.split('.');
+      let val = 0;
+      for (const ch of intPart) {
+        const d = DIGIT_CHARS.indexOf(ch);
+        if (d >= 0) val = val * 12 + d;
+      }
+      let place = 1 / 12;
+      for (const ch of fracPart) {
+        const d = DIGIT_CHARS.indexOf(ch);
+        if (d >= 0) { val += d * place; place /= 12; }
+      }
+      if (exp12) val *= Math.pow(12, exp12);
+      return neg ? -val : val;
+    }
+    function toBase12Plain(num, maxFrac) {
+      const neg = num < 0;
+      num = Math.abs(num);
+      let intPart = Math.floor(num + 1e-12);
+      let frac = num - intPart;
+      let intStr = '';
+      if (intPart === 0) intStr = '0';
+      else {
+        while (intPart > 0) {
+          intStr = DIGIT_CHARS[intPart % 12] + intStr;
+          intPart = Math.floor(intPart / 12);
+        }
+      }
+      let fracStr = '';
+      if (frac > 1e-12) {
+        fracStr = '.';
+        for (let i = 0; i < maxFrac && frac > 1e-12; i++) {
+          frac *= 12;
+          const digit = Math.min(11, Math.floor(frac + 1e-12));
+          fracStr += DIGIT_CHARS[digit];
+          frac -= digit;
+        }
+        fracStr = fracStr.replace(/0+$/, '');
+        if (fracStr === '.') fracStr = '';
+      }
+      return (neg ? '-' : '') + intStr + fracStr;
+    }
+    function toBase12(num, maxFrac = 6) {
+      if (!isFinite(num)) return 'Error';
+      num = snapDozenal(num);
+      if (Math.abs(num) < 1e-15) return '0';
+      const MAX_DIGITS = 10;
+      const abs = Math.abs(num);
+      const exp10 = Math.log(abs) / Math.log(12);
+      const exp = Math.floor(exp10 + 1e-12);
+      if (exp >= MAX_DIGITS || exp <= -MAX_DIGITS) {
+        const mant = abs / Math.pow(12, exp);
+        let mStr = toBase12Plain(mant, 4).replace(/^-/, '');
+        if (mStr.indexOf('.') === -1 && mStr.length > 1) {
+          mStr = mStr[0] + '.' + mStr.slice(1);
+        }
+        let eAbs = Math.abs(exp);
+        let eStr = '';
+        if (eAbs === 0) eStr = '0';
+        else {
+          while (eAbs > 0) {
+            eStr = DIGIT_CHARS[eAbs % 12] + eStr;
+            eAbs = Math.floor(eAbs / 12);
+          }
+        }
+        return (num < 0 ? '-' : '') + mStr + 'e' + (exp < 0 ? '-' : '') + eStr;
+      }
+      return toBase12Plain(num, maxFrac);
+    }
+    function snapDozenal(num) {
+      if (!isFinite(num) || num === 0) return num;
+      const sign = num < 0 ? -1 : 1;
+      const a = Math.abs(num);
+      const tryDen = [12, 144, 1728];
+      for (const den of tryDen) {
+        const n = Math.round(a * den);
+        if (Math.abs(a - n / den) < 1e-6) return sign * n / den;
+      }
+      return num;
+    }
+    function formatResult(num) {
+      if (!isFinite(num)) return 'Error';
+      num = snapDozenal(num);
+      const a = Math.abs(num);
+      if (Math.abs(a - Math.PI) < 1e-12 || Math.abs(a - TAU) < 1e-12) return toBase12(num, 8);
+      return toBase12(num, 6);
+    }
+    function formatDecimal(n) {
+      if (!isFinite(n)) return 'Error';
+      if (Math.abs(n) < 1e-10) return '0';
+      if (Math.abs(n) >= 1e12 || (Math.abs(n) < 1e-6 && n !== 0)) {
+        return n.toExponential(4).replace('e+', 'e');
+      }
+      if (Number.isInteger(n) || Math.abs(n - Math.round(n)) < 1e-9) return Math.round(n).toLocaleString('en-US');
+      return n.toLocaleString('en-US', { maximumFractionDigits: 6 });
+    }
+    function opSymbol(op) {
+      if (op === 'sqrt') return '√';
+      if (op === '%') return 'mod';
+      return op;
+    }
+    function pushTape(html) {
+      if (!html) return;
+      tapeEl.innerHTML = html;
+    }
+    function updateDisplay() {
+      const text = toKaktovik(current);
+      displayEl.textContent = text;
+      const len = text.length;
+      let size = 40;
+      if (len > 8) size = 32;
+      if (len > 11) size = 28;
+      if (len > 13) size = 24;
+      if (len > 15) size = 20;
+      displayEl.style.fontSize = size + 'px';
+      ascii12El.innerHTML = current + '<sub>12</sub>';
+      decimalEl.innerHTML = '= ' + formatDecimal(parseBase12(current)) + '<sub>10</sub>';
+      expressionEl.innerHTML = expression || renderTokens();
+      const ang = document.getElementById('angleFlag');
+      if (ang) ang.textContent = angleDeg ? '12T' : 'RAD';
+      document.querySelector('.calculator').classList.toggle('arabic', phonePad);
+      memBtn.classList.toggle('has-mem', memory !== 0);
+      const flag = document.getElementById('memFlag');
+      if (flag) flag.classList.toggle('on', memory !== 0);
+    }
+    function tokenGlyph(tok) {
+      if ('+−×÷^%()'.indexOf(tok) !== -1 || tok === 'τ' || tok === 'π' || tok === '-τ' || tok === '-π' || tok === '√') {
+        if (tok === '%') return '<span class="op">mod</span>';
+        if ('+−×÷^'.indexOf(tok) !== -1) return '<span class="op">' + tok + '</span>';
+        if (tok === '-π' || tok === '-τ') return '<span class="op">−' + tok.slice(1) + '</span>';
+        if (tok === 'τ' || tok === 'π' || tok === '√') return '<span class="op">' + tok + '</span>';
+        return tok;
+      }
+      return toKaktovik(tok);
+    }
+    function renderTokens() {
+      const parts = tokens.map(tokenGlyph);
+      if (isOpTok(lastTok()) && rightShown && current && current !== '') parts.push(toKaktovik(current));
+      else if (!fresh && current && current !== '') parts.push(toKaktovik(current));
+      else if (tokens.length === 0) parts.push(toKaktovik(current));
+      return parts.join(' ');
+    }
+    function flushNumber() {
+      if (!fresh && current !== '' && current !== 'Error') {
+        tokens.push(current);
+        fresh = true;
+      }
+    }
+    function lastTok() { return tokens.length ? tokens[tokens.length - 1] : ''; }
+    function isOpTok(t) { return t === '+' || t === '−' || t === '×' || t === '÷' || t === '^' || t === '%'; }
+    function isConstTok(t) { return t === 'π' || t === 'τ' || t === '-π' || t === '-τ'; }
+    function implicitMul() {
+      const last = lastTok();
+      if (last === ')' || isConstTok(last) || (last && !isOpTok(last) && last !== '(')) tokens.push('×');
+    }
+    function evalExpr(src) {
+      const list = [];
+      for (let i = 0; i < src.length; i++) {
+        if (src[i] === '(') {
+          let depth = 1, j = i + 1;
+          while (j < src.length && depth) {
+            if (src[j] === '(') depth++;
+            else if (src[j] === ')') depth--;
+            j++;
+          }
+          list.push({ v: evalExpr(src.slice(i + 1, j - 1)), g: true });
+          i = j - 1;
+        } else if (src[i] === 'τ') list.push({ v: TAU, g: true });
+        else if (src[i] === '-τ') list.push({ v: -TAU, g: true });
+        else if (src[i] === 'π') list.push({ v: Math.PI, g: true });
+        else if (src[i] === '-π') list.push({ v: -Math.PI, g: true });
+        else if (isOpTok(src[i])) list.push(src[i]);
+        else list.push({ v: parseBase12(src[i]), g: false });
+      }
+      const prec = { '^': 3, '×': 2, '÷': 2, '%': 2, '+': 1, '−': 1 };
+      const right = { '^': true };
+      const out = [], ops = [];
+      for (const t of list) {
+        if (typeof t === 'object') out.push(t);
+        else {
+          while (ops.length) {
+            const top = ops[ops.length - 1];
+            if ((!right[t] && prec[top] >= prec[t]) || (right[t] && prec[top] > prec[t])) out.push(ops.pop());
+            else break;
+          }
+          ops.push(t);
+        }
+      }
+      while (ops.length) out.push(ops.pop());
+      const st = [];
+      for (const t of out) {
+        if (typeof t === 'object') st.push(t);
+        else {
+          const b = st.pop(), a = st.pop();
+          if (!a || !b) return NaN;
+          const old = powerBaseGrouped;
+          powerBaseGrouped = !!a.g;
+          const v = compute(a.v, t, b.v);
+          powerBaseGrouped = old;
+          st.push({ v: v, g: false });
+        }
+      }
+      return st.length ? st[0].v : 0;
+    }
+    function inputDigit(d) {
+      undoEntry = null;
+      groupedCurrent = false;
+      if (justEvaluated && !operator && tokens.length === 0) {
+        tokens = [];
+        expression = '';
+        current = '0';
+        justEvaluated = false;
+        fresh = true;
+      }
+      justEvaluated = false;
+      rightShown = true;
+      if (isConstTok(lastTok()) && (fresh || current === '0' || current === '-0')) {
+        tokens.push('^');
+        operator = '^';
+        previous = lastTok() === 'π' ? Math.PI : TAU;
+      }
+      if (d === '.') {
+        if (fresh) { current = '0.'; fresh = false; }
+        else if (!current.includes('.')) current += '.';
+        expression = renderTokens();
+        updateDisplay(); return;
+      }
+      if (fresh) { current = d; fresh = false; }
+      else if (current === '0') current = d;
+      else if (current === '-0') current = '-' + d;
+      else if (current.replace('-','').replace('.','').length < 10) current += d;
+      expression = renderTokens();
+      updateDisplay();
+    }
+    function applyPadLayout() {
+      document.querySelectorAll('button.digit').forEach(btn => {
+        const val = phonePad ? btn.dataset.phone : btn.dataset.bars;
+        btn.dataset.digit = val;
+        if (phonePad) {
+          btn.textContent = val;
+          btn.style.fontFamily = '-apple-system, BlinkMacSystemFont, sans-serif';
+          btn.style.fontSize = '22px';
+          btn.style.webkitTextStroke = '0';
+          btn.style.fontWeight = '600';
+        } else {
+          const i = DIGIT_CHARS.indexOf(val);
+          btn.textContent = i >= 0 ? KAK[i] : val;
+          btn.style.fontFamily = '';
+          btn.style.fontSize = '';
+          btn.style.webkitTextStroke = '';
+          btn.style.fontWeight = '';
+        }
+      });
+    }
+    function togglePadLayout() {
+      phonePad = !phonePad;
+      applyPadLayout();
+      updateDisplay();
+    }
+    function setOpMode(advanced) {
+      advancedOps = advanced;
+      document.querySelector('.calculator').classList.toggle('adv', advanced);
+      document.getElementById('modeBasic').classList.toggle('on', !advanced);
+      document.getElementById('modeAdv').classList.toggle('on', advanced);
+      if (advanced) {
+        opButtons[0].classList.add('dual');
+        opButtons[0].innerHTML = '<span class="k-main">mod</span><span class="k-sub">%</span>';
+        opButtons[0].dataset.op = '%';
+        opButtons[1].textContent = '√';   opButtons[1].dataset.op = 'sqrt';
+        opButtons[2].classList.add('dual');
+        opButtons[2].innerHTML = '<span class="k-main">^</span><span class="k-sub">eˣ</span>';
+        opButtons[2].dataset.op = '^';
+        opButtons[3].classList.add('dual');
+        opButtons[3].innerHTML = '<span class="k-main">Tau</span><span class="k-sub">π</span>';
+        opButtons[3].dataset.op = 'tau';
+      } else {
+        opButtons[0].classList.remove('dual');
+        opButtons[2].classList.remove('dual');
+        opButtons[3].classList.remove('dual');
+        opButtons[0].textContent = '+'; opButtons[0].dataset.op = '+';
+        opButtons[1].textContent = '−'; opButtons[1].dataset.op = '−';
+        opButtons[2].textContent = '×'; opButtons[2].dataset.op = '×';
+        opButtons[3].textContent = '÷'; opButtons[3].dataset.op = '÷';
+      }
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+    }
+    function compute(a, op, b) {
+      switch (op) {
+        case '+': return a + b;
+        case '−': return a - b;
+        case '×': return a * b;
+        case '÷': return b === 0 ? NaN : a / b;
+        case '^':
+          if (a < 0 && !powerBaseGrouped) return -Math.pow(Math.abs(a), b);
+          return Math.pow(a, b);
+        case '%': return b === 0 ? NaN : a % b;
+        default: return b;
+      }
+    }
+    function toRad(v) { return angleDeg ? v * TAU / 12 : v; }
+    function fromRad(v) { return angleDeg ? v * 12 / TAU : v; }
+    function applyUnary(fn) {
+      const val = parseBase12(current);
+      const g = toKaktovik(current);
+      const labels = {
+        sqrt: '√', inv: '1/x', sin: 'sin', cos: 'cos', tan: 'tan',
+        asin: 'asin', acos: 'acos', exp: 'eˣ', log12: 'log₁₂', ln: 'ln'
+      };
+      const label = labels[fn];
+      if (!label) return;
+      let out;
+      if (fn === 'sqrt') out = val < 0 ? NaN : Math.sqrt(val);
+      else if (fn === 'inv') out = val === 0 ? NaN : 1 / val;
+      else if (fn === 'sin') out = Math.sin(toRad(val));
+      else if (fn === 'cos') out = Math.cos(toRad(val));
+      else if (fn === 'tan') out = Math.tan(toRad(val));
+      else if (fn === 'asin') out = (val < -1 || val > 1) ? NaN : fromRad(Math.asin(val));
+      else if (fn === 'acos') out = (val < -1 || val > 1) ? NaN : fromRad(Math.acos(val));
+      else if (fn === 'exp') out = Math.exp(val);
+      else if (fn === 'log12') out = val <= 0 ? NaN : Math.log(val) / Math.log(12);
+      else if (fn === 'ln') out = val <= 0 ? NaN : Math.log(val);
+      current = isFinite(out) ? formatResult(out) : 'Error';
+      expression = '<span class="op">' + label + '</span> ' + g + ' =';
+      pushTape(expression + ' ' + toKaktovik(current));
+      previous = null; operator = null; tokens = []; fresh = true; justEvaluated = true;
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+      updateDisplay();
+    }
+    function insertConst(name) {
+      const hasNum = current && current !== 'Error' && current !== '0' && current !== '-0' && current !== '';
+      justEvaluated = false;
+      if (tokens.length === 0 && hasNum) {
+        tokens = [current];
+        tokens.push('×');
+      } else if (!fresh && hasNum) {
+        flushNumber();
+        tokens.push('×');
+      } else {
+        implicitMul();
+      }
+      tokens.push(name);
+      current = '0';
+      fresh = true;
+      rightShown = false;
+      operator = null;
+      expression = renderTokens();
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+      updateDisplay();
+    }
+    function insertTau() { insertConst('τ'); }
+    function insertPi() { insertConst('π'); }
+    function applyPercent() {
+      undoEntry = { current, previous, operator, expression, fresh };
+      const val = parseBase12(current);
+      const curGlyphs = toKaktovik(current);
+      if (previous !== null && operator && operator !== '%') {
+        const base = previous;
+        let result;
+        if (operator === '+' || operator === '−') {
+          const pct = base * val / HUNDRED12;
+          result = operator === '+' ? base + pct : base - pct;
+        } else result = compute(base, operator, val / HUNDRED12);
+        expression = toKaktovik(toBase12(base)) + ' <span class="op">' + opSymbol(operator) + '</span> ' + curGlyphs + '<span class="op">%</span> =';
+        current = formatResult(result);
+      } else {
+        expression = curGlyphs + '<span class="op">%</span> =';
+        current = formatResult(val / HUNDRED12);
+      }
+      previous = null; operator = null; fresh = true;
+      pushTape(expression + ' ' + toKaktovik(current));
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+      updateDisplay();
+    }
+    function setOperator(op) {
+      if (op === 'sqrt') { applyUnary('sqrt'); return; }
+      if (op === 'tau') { insertTau(); return; }
+      justEvaluated = false;
+      const leftVal = parseBase12(current);
+      if (tokens.length === 0) {
+        tokens = [(current && current !== 'Error') ? current : '0'];
+      } else {
+        flushNumber();
+      }
+      if (isOpTok(lastTok())) tokens[tokens.length - 1] = op;
+      else tokens.push(op);
+      previous = leftVal;
+      operator = op;
+      fresh = true;
+      rightShown = false;
+      expression = renderTokens();
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+      const btn = document.querySelector('button[data-op="' + op + '"]');
+      if (btn) btn.classList.add('active');
+      updateDisplay();
+    }
+    function equals() {
+      const rightStr = (current && current !== 'Error') ? current : '0';
+      const rightVal = parseBase12(rightStr);
+      const leftVal = previous;
+      const op = operator;
+      flushNumber();
+      if (isOpTok(lastTok()) && !(fresh && (rightStr === '0' || rightStr === '-0'))) tokens.push(rightStr);
+      let result;
+      if (tokens.length) result = evalExpr(tokens);
+      else if (op && leftVal !== null) result = compute(leftVal, op, rightVal);
+      else result = rightVal;
+      if (!isFinite(result)) current = 'Error';
+      else current = formatResult(result);
+      if (tokens.length) {
+        expression = tokens.map(tokenGlyph).join(' ') + ' =';
+      } else if (op && leftVal !== null) {
+        expression = toKaktovik(toBase12(leftVal)) +
+          ' <span class="op">' + opSymbol(op) + '</span> ' +
+          toKaktovik(rightStr) + ' =';
+      } else {
+        expression = toKaktovik(rightStr) + ' =';
+      }
+      pushTape(expression + ' ' + toKaktovik(current));
+      tokens = [];
+      previous = null; operator = null; fresh = true; justEvaluated = true; rightShown = false;
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+      updateDisplay();
+    }
+    function backspace() {
+      if (!fresh && current.length) {
+        if (current.length <= 1 || (current.length === 2 && current.startsWith('-'))) {
+          current = '0'; fresh = true;
+        } else current = current.slice(0, -1);
+        expression = renderTokens();
+        updateDisplay(); return;
+      }
+      if (tokens.length) {
+        const t = tokens.pop();
+        if (!isOpTok(t) && t !== '(' && t !== ')' && t !== 'τ') {
+          current = t; fresh = false;
+        } else {
+          current = '0'; fresh = true;
+        }
+        expression = renderTokens();
+        document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+        updateDisplay();
+      }
+    }
+    function toggleSign() {
+      if (current === 'Error') return;
+      if (isConstTok(lastTok()) && (fresh || current === '0' || current === '-0')) {
+        const t = lastTok();
+        tokens[tokens.length - 1] = t.charAt(0) === '-' ? t.slice(1) : '-' + t;
+        expression = renderTokens();
+        updateDisplay();
+        return;
+      }
+      if (justEvaluated) { tokens = []; justEvaluated = false; }
+      if (current.startsWith('-')) current = current.slice(1) || '0';
+      else if (current === '0') current = '0';
+      else current = '-' + current;
+      expression = renderTokens();
+      updateDisplay();
+    }
+    function openParen() {
+      if (justEvaluated) {
+        tokens = [];
+        current = '0';
+        justEvaluated = false;
+        fresh = true;
+      }
+      flushNumber();
+      implicitMul();
+      tokens.push('(');
+      current = '0';
+      fresh = true;
+      expression = renderTokens();
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+      updateDisplay();
+    }
+    function closeParen() {
+      flushNumber();
+      if (lastTok() !== ')') tokens.push(')');
+      groupedCurrent = true;
+      let depth = 0, start = -1;
+      for (let i = tokens.length - 1; i >= 0; i--) {
+        if (tokens[i] === ')') depth++;
+        else if (tokens[i] === '(') {
+          depth--;
+          if (depth === 0) { start = i; break; }
+        }
+      }
+      if (start >= 0) {
+        const inner = evalExpr(tokens.slice(start + 1, tokens.length - 1));
+        if (isFinite(inner)) current = formatResult(inner);
+      }
+      fresh = true;
+      rightShown = false;
+      expression = renderTokens();
+      updateDisplay();
+    }
+    function memoryAdd() {
+      memory += parseBase12(current);
+      updateDisplay();
+    }
+    function memoryRecall() {
+      const memStr = formatResult(memory);
+      current = memStr;
+      fresh = true;
+      if (isConstTok(lastTok())) {
+        tokens.push('^');
+        rightShown = true;
+        justEvaluated = false;
+        operator = '^';
+        previous = lastTok() === '^' ? (tokens[tokens.length - 2] === 'π' ? Math.PI : TAU) : previous;
+      } else if (operator) {
+        rightShown = true;
+        justEvaluated = false;
+        if (!tokens.length) tokens = [];
+      } else {
+        tokens = [];
+        justEvaluated = true;
+        rightShown = false;
+      }
+      expression = renderTokens();
+      updateDisplay();
+    }
+    function memoryClear() {
+      memory = 0;
+      updateDisplay();
+    }
+    function memorySub() {
+      memory -= parseBase12(current);
+      updateDisplay();
+    }
+
+    document.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn._skipClick || (btn._ignoreClicksUntil && Date.now() < btn._ignoreClicksUntil)) {
+          btn._skipClick = false;
+          return;
+        }
+        if (btn.dataset.digit !== undefined) inputDigit(btn.dataset.digit);
+        else if (btn.dataset.op) setOperator(btn.dataset.op);
+        else if (btn.dataset.action === 'equals') equals();
+        else if (btn.dataset.action === 'backspace') backspace();
+        else if (btn.dataset.action === 'sign') toggleSign();
+        else if (btn.dataset.action === 'dot') inputDigit('.');
+        else if (btn.dataset.action === 'inv') applyUnary('inv');
+        else if (btn.dataset.action === 'sin') applyUnary('sin');
+        else if (btn.dataset.action === 'cos') applyUnary('cos');
+        else if (btn.dataset.action === 'tan') applyUnary('tan');
+        else if (btn.dataset.action === 'log12') applyUnary('log12');
+        else if (btn.dataset.action === 'asin') applyUnary('asin');
+        else if (btn.dataset.action === 'acos') applyUnary('acos');
+        else if (btn.dataset.action === 'exp') applyUnary('exp');
+        else if (btn.dataset.action === 'ln') applyUnary('ln');
+        else if (btn.dataset.action === 'lparen') openParen();
+        else if (btn.dataset.action === 'rparen') closeParen();
+        else if (btn.dataset.action === 'mem') memoryAdd();
+        else if (btn.dataset.action === 'mr') memoryRecall();
+        else if (btn.dataset.action === 'mc') memoryClear();
+        else if (btn.dataset.action === 'mminus' || btn.dataset.action === 'msub') memorySub();
+      });
+    });
+    document.getElementById('modeBasic').addEventListener('click', () => setOpMode(false));
+    document.getElementById('modeAdv').addEventListener('click', () => setOpMode(true));
+
+    document.addEventListener('keydown', e => {
+      const key = e.key;
+      if (/[0-9]/.test(key)) inputDigit(key);
+      else if (key === 'a' || key === 'A') inputDigit('A');
+      else if (key === 'b' || key === 'B') inputDigit('B');
+      else if (key === '.') inputDigit('.');
+      else if (key === '+') setOperator('+');
+      else if (key === '-') setOperator('−');
+      else if (key === '*' || key === 'x') setOperator('×');
+      else if (key === '/') setOperator('÷');
+      else if (key === '%') setOperator('%');
+      else if (key === '^') setOperator('^');
+      else if (key === '(') openParen();
+      else if (key === ')') closeParen();
+      else if (key === 'Enter' || key === '=') equals();
+      else if (key === 'Escape' || key === 'c' || key === 'C') {
+        current = '0'; previous = null; operator = null; expression = ''; fresh = true; undoEntry = null; tokens = []; justEvaluated = false;
+        document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+        updateDisplay();
+      }
+      else if (key === 'Backspace') backspace();
+    });
+
+    ['click', 'touchstart', 'touchend', 'mousedown'].forEach(ev => {
+      document.getElementById('angleFlag').addEventListener(ev, e => {
+        e.stopPropagation();
+        if (ev === 'click' || ev === 'touchend') {
+          if (ev === 'click') { angleDeg = !angleDeg; updateDisplay(); }
+        }
+      }, { passive: true });
+    });
+
+    (function () {
+      const box = document.getElementById('displayBox');
+      let startY = null, startT = 0, holdTimer = null, switched = false;
+      function clearHold() { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } }
+      function begin(y) {
+        startY = y; startT = Date.now(); switched = false;
+        clearHold();
+        holdTimer = setTimeout(() => { holdTimer = null; switched = true; togglePadLayout(); }, 1200);
+      }
+      function move(y) {
+        if (startY === null) return;
+        if (Math.abs(startY - y) > 14) clearHold();
+      }
+      function end(y) {
+        const dy = startY === null ? 0 : startY - y;
+        const dt = Date.now() - startT;
+        clearHold();
+        startY = null;
+        if (switched) return;
+        if (dy > 40 && dt < 600) document.querySelector('.calculator').classList.toggle('flip');
+      }
+      box.addEventListener('touchstart', e => { if (e.touches.length === 1) begin(e.touches[0].clientY); }, { passive: true });
+      box.addEventListener('touchmove', e => { if (e.touches.length) move(e.touches[0].clientY); }, { passive: true });
+      box.addEventListener('touchend', e => end(e.changedTouches[0] ? e.changedTouches[0].clientY : startY), { passive: true });
+      box.addEventListener('touchcancel', clearHold, { passive: true });
+      box.addEventListener('mousedown', e => begin(e.clientY));
+      box.addEventListener('mousemove', e => { if (e.buttons) move(e.clientY); });
+      box.addEventListener('mouseup', e => end(e.clientY));
+      box.addEventListener('mouseleave', clearHold);
+    })();
+
+    function bindLongPress(btn, fn, ms) {
+      if (!btn) return;
+      let timer = null, touch = false;
+      function start(e) {
+        if (e.type === 'mousedown' && touch) return;
+        if (e.type === 'touchstart') touch = true;
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => {
+          timer = null;
+          btn._skipClick = true;
+          btn._ignoreClicksUntil = Date.now() + 700;
+          fn();
+        }, ms);
+      }
+      function cancel() {
+        if (timer) { clearTimeout(timer); timer = null; }
+        setTimeout(() => { touch = false; }, 500);
+      }
+      btn.addEventListener('touchstart', start, { passive: true });
+      btn.addEventListener('mousedown', start);
+      btn.addEventListener('touchend', cancel, { passive: true });
+      btn.addEventListener('touchcancel', cancel, { passive: true });
+      btn.addEventListener('mouseup', cancel);
+    }
+    bindLongPress(document.getElementById('op4'), () => {
+      if (advancedOps && document.getElementById('op4').dataset.op === 'tau') insertPi();
+    }, 450);
+    bindLongPress(document.getElementById('op1'), () => {
+      if (advancedOps && document.getElementById('op1').dataset.op === '%') applyPercent();
+    }, 450);
+    bindLongPress(document.querySelector('[data-action=backspace]'), () => {
+      current = '0'; previous = null; operator = null; expression = ''; fresh = true; undoEntry = null; tokens = []; justEvaluated = false;
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+      updateDisplay();
+    }, 500);
+    bindLongPress(document.getElementById('sciSin'), () => { if (advancedOps) applyUnary('asin'); }, 450);
+    bindLongPress(document.getElementById('sciCos'), () => { if (advancedOps) applyUnary('acos'); }, 450);
+    bindLongPress(document.getElementById('op3'), () => {
+      if (advancedOps && document.getElementById('op3').dataset.op === '^') applyUnary('exp');
+    }, 450);
+    bindLongPress(document.getElementById('sciLog'), () => { if (advancedOps) applyUnary('ln'); }, 450);
+    bindLongPress(memBtn, () => { if (!advancedOps) memoryRecall(); }, 450);
+    bindLongPress(document.getElementById('memClearBtn'), () => { if (advancedOps) memoryClear(); }, 450);
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+    updateDisplay();
+  </script>
+</body>
+</html>

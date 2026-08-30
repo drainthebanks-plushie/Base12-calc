@@ -1,12 +1,11 @@
-const CACHE = "base12-kaktovik-v56";
+const CACHE = "base12-kaktovik-v53";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
   "./icon-180.png",
   "./icon-192.png",
-  "./icon-512.png",
-  "./bg-animals.jpg"
+  "./icon-512.png"
 ];
 
 self.addEventListener("install", event => {
