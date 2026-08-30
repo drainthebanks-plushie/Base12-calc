@@ -92,7 +92,8 @@
       letter-spacing: .08em; padding: 2px 4px; border-radius: 4px;
     }
     .ascii12 { font-size: 12px; color: #c9a227; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-    .decimal-eq { font-size: 12px; color: var(--muted); }
+    .decimal-eq { font-size: 12px; color: var(--muted); display: none; }
+    .calculator.arabic .decimal-eq { display: inline; }
     .mode {
       display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 0 0 10px;
       background: #161618; border-radius: 12px; padding: 3px; border: 1px solid #3a3a40;
@@ -393,8 +394,20 @@
       }
       return toBase12Plain(num, maxFrac);
     }
+    function snapDozenal(num) {
+      if (!isFinite(num) || num === 0) return num;
+      const sign = num < 0 ? -1 : 1;
+      const a = Math.abs(num);
+      const tryDen = [12, 144, 1728];
+      for (const den of tryDen) {
+        const n = Math.round(a * den);
+        if (Math.abs(a - n / den) < 1e-10) return sign * n / den;
+      }
+      return num;
+    }
     function formatResult(num) {
       if (!isFinite(num)) return 'Error';
+      num = snapDozenal(num);
       const a = Math.abs(num);
       if (Math.abs(a - Math.PI) < 1e-12 || Math.abs(a - TAU) < 1e-12) return toBase12(num, 8);
       return toBase12(num, 6);
@@ -431,7 +444,8 @@
       decimalEl.innerHTML = '= ' + formatDecimal(parseBase12(current)) + '<sub>10</sub>';
       expressionEl.innerHTML = expression || renderTokens();
       const ang = document.getElementById('angleFlag');
-      if (ang) ang.textContent = angleDeg ? 'DEG' : 'RAD';
+      if (ang) ang.textContent = angleDeg ? '12T' : 'RAD';
+      document.querySelector('.calculator').classList.toggle('arabic', phonePad);
       memBtn.classList.toggle('has-mem', memory !== 0);
       const flag = document.getElementById('memFlag');
       if (flag) flag.classList.toggle('on', memory !== 0);
@@ -564,6 +578,7 @@
     function togglePadLayout() {
       phonePad = !phonePad;
       applyPadLayout();
+      updateDisplay();
     }
     function setOpMode(advanced) {
       advancedOps = advanced;
@@ -605,8 +620,8 @@
         default: return b;
       }
     }
-    function toRad(v) { return angleDeg ? v * Math.PI / 180 : v; }
-    function fromRad(v) { return angleDeg ? v * 180 / Math.PI : v; }
+    function toRad(v) { return angleDeg ? v * TAU / 12 : v; }
+    function fromRad(v) { return angleDeg ? v * 12 / TAU : v; }
     function applyUnary(fn) {
       const val = parseBase12(current);
       const g = toKaktovik(current);
