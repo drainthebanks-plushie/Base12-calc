@@ -557,13 +557,12 @@
       updateDisplay();
     }
     function insertConst(name) {
-      if (justEvaluated && !operator && tokens.length === 0) {
-        tokens = [];
-        current = '0';
-        fresh = true;
-      }
+      const hasNum = current && current !== 'Error' && current !== '0' && current !== '-0' && current !== '';
       justEvaluated = false;
-      if (!fresh && current !== '0' && current !== '-0' && current !== '') {
+      if (tokens.length === 0 && hasNum) {
+        tokens = [current];
+        tokens.push('×');
+      } else if (!fresh && hasNum) {
         flushNumber();
         tokens.push('×');
       } else {
@@ -723,11 +722,24 @@
       updateDisplay();
     }
     function memoryRecall() {
-      current = toBase12(memory);
+      const memStr = toBase12(memory);
+      current = memStr;
       fresh = true;
-      justEvaluated = !operator;
-      if (!operator) tokens = [];
-      rightShown = !!operator;
+      if (isConstTok(lastTok())) {
+        tokens.push('^');
+        rightShown = true;
+        justEvaluated = false;
+        operator = '^';
+        previous = lastTok() === '^' ? (tokens[tokens.length - 2] === 'π' ? Math.PI : TAU) : previous;
+      } else if (operator) {
+        rightShown = true;
+        justEvaluated = false;
+        if (!tokens.length) tokens = [];
+      } else {
+        tokens = [];
+        justEvaluated = true;
+        rightShown = false;
+      }
       expression = renderTokens();
       updateDisplay();
     }
