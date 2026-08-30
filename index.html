@@ -378,9 +378,10 @@
       if (flag) flag.classList.toggle('on', memory !== 0);
     }
     function tokenGlyph(tok) {
-      if ('+−×÷^%()'.indexOf(tok) !== -1 || tok === 'τ' || tok === 'π' || tok === '√') {
+      if ('+−×÷^%()'.indexOf(tok) !== -1 || tok === 'τ' || tok === 'π' || tok === '-τ' || tok === '-π' || tok === '√') {
         if (tok === '%') return '<span class="op">mod</span>';
         if ('+−×÷^'.indexOf(tok) !== -1) return '<span class="op">' + tok + '</span>';
+        if (tok === '-π' || tok === '-τ') return '<span class="op">−' + tok.slice(1) + '</span>';
         if (tok === 'τ' || tok === 'π' || tok === '√') return '<span class="op">' + tok + '</span>';
         return tok;
       }
@@ -401,7 +402,7 @@
     }
     function lastTok() { return tokens.length ? tokens[tokens.length - 1] : ''; }
     function isOpTok(t) { return t === '+' || t === '−' || t === '×' || t === '÷' || t === '^' || t === '%'; }
-    function isConstTok(t) { return t === 'π' || t === 'τ'; }
+    function isConstTok(t) { return t === 'π' || t === 'τ' || t === '-π' || t === '-τ'; }
     function implicitMul() {
       const last = lastTok();
       if (last === ')' || isConstTok(last) || (last && !isOpTok(last) && last !== '(')) tokens.push('×');
@@ -419,7 +420,9 @@
           list.push({ v: evalExpr(src.slice(i + 1, j - 1)), g: true });
           i = j - 1;
         } else if (src[i] === 'τ') list.push({ v: TAU, g: true });
+        else if (src[i] === '-τ') list.push({ v: -TAU, g: true });
         else if (src[i] === 'π') list.push({ v: Math.PI, g: true });
+        else if (src[i] === '-π') list.push({ v: -Math.PI, g: true });
         else if (isOpTok(src[i])) list.push(src[i]);
         else list.push({ v: parseBase12(src[i]), g: false });
       }
@@ -673,10 +676,17 @@
     }
     function toggleSign() {
       if (current === 'Error') return;
+      if (isConstTok(lastTok()) && (fresh || current === '0' || current === '-0')) {
+        const t = lastTok();
+        tokens[tokens.length - 1] = t.charAt(0) === '-' ? t.slice(1) : '-' + t;
+        expression = renderTokens();
+        updateDisplay();
+        return;
+      }
       if (justEvaluated) { tokens = []; justEvaluated = false; }
       if (current.startsWith('-')) current = current.slice(1) || '0';
-      else current = current === '0' ? '-0' : '-' + current;
-      if (current === '-0') fresh = false;
+      else if (current === '0') current = '0';
+      else current = '-' + current;
       expression = renderTokens();
       updateDisplay();
     }
