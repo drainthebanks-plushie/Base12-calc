@@ -118,29 +118,34 @@
     .calculator.adv .fun-row,
     .calculator.adv .bot-row,
     .calculator.adv .num-row {
-      grid-template-columns: 1fr 1fr 1fr 1.1fr 1.1fr;
+      grid-template-columns: 1fr 1fr 1fr 0.73fr 0.73fr 0.73fr;
     }
     .calculator.flip:not(.adv) .num-row,
     .calculator.flip:not(.adv) .bot-row {
       grid-template-columns: 1.1fr 1fr 1fr 1fr;
     }
+    .calculator.flip.adv .fun-row,
     .calculator.flip.adv .num-row,
     .calculator.flip.adv .bot-row {
-      grid-template-columns: 1.1fr 1.1fr 1fr 1fr 1fr;
+      grid-template-columns: 0.73fr 0.73fr 0.73fr 1fr 1fr 1fr;
     }
-    .calculator.flip .num-row .op:not(.side-op) { order: 1; }
-    .calculator.flip .num-row .side-op { order: 2; }
-    .calculator.flip .num-row .digit { order: 3; }
+    .calculator.flip .num-row .sci-op { order: 1; }
+    .calculator.flip .num-row .op:not(.side-op):not(.sci-op) { order: 2; }
+    .calculator.flip .num-row .side-op { order: 3; }
+    .calculator.flip .num-row .digit { order: 4; }
     .calculator.flip .bot-row .equals { order: 1; }
     .calculator.flip .bot-row [data-action="backspace"] { order: 2; }
     .calculator.flip .bot-row [data-action="sign"] { order: 3; }
     .calculator.flip .bot-row [data-action="dot"] { order: 4; }
     .mem-extra { display: none; }
     .calculator.adv .mem-extra { display: flex; }
-    .calculator.adv .equals { grid-column: span 2; }
-    .side-op { display: none; }
-    .calculator.adv .side-op { display: flex; font-size: 20px; }
-    .calculator.adv button.op { font-size: 16px; }
+    .calculator.adv .equals { grid-column: span 3; }
+    .side-op, .sci-op { display: none; }
+    .calculator.adv .side-op,
+    .calculator.adv .sci-op { display: flex; font-size: 15px; }
+    .calculator.adv button.op { font-size: 15px; }
+    .calculator.adv button.sci-op.dual .k-main { font-size: 11px; }
+    .calculator.adv button.sci-op.dual .k-sub { font-size: 9px; }
     button.dual {
       flex-direction: column; gap: 0; line-height: 1.05; padding: 4px 0;
     }
@@ -213,8 +218,9 @@
         <button class="fn" data-action="lparen">(</button>
         <button class="fn" data-action="rparen">)</button>
         <button class="fn" data-action="inv">1/x</button>
-        <button class="fn dual has-mem-host" id="memBtn" data-action="mem"><span class="k-main">M+</span><span class="k-sub">MR</span></button>
-        <button class="fn dual mem-extra" id="memClearBtn" data-action="mc"><span class="k-main">MC</span><span class="k-sub">M−</span></button>
+        <button class="fn has-mem-host" id="memBtn" data-action="mem">M+</button>
+        <button class="fn mem-extra" id="memSubBtn" data-action="msub">M−</button>
+        <button class="fn dual mem-extra" id="memClearBtn" data-action="mr"><span class="k-main">MR</span><span class="k-sub">MC</span></button>
       </div>
 
       <div class="numpad" id="numpad">
@@ -224,6 +230,7 @@
           <button class="digit" data-bars="9" data-phone="9" data-digit="9">𝋏</button>
           <button class="op side-op" data-op="+">+</button>
           <button class="op" id="op1" data-op="+">+</button>
+          <button class="op dual sci-op" id="sciSin" data-action="sin"><span class="k-main">sin</span><span class="k-sub">asin</span></button>
         </div>
         <div class="num-row">
           <button class="digit" data-bars="4" data-phone="4" data-digit="4">𝋆</button>
@@ -231,6 +238,7 @@
           <button class="digit" data-bars="6" data-phone="6" data-digit="6">𝋊</button>
           <button class="op side-op" data-op="−">−</button>
           <button class="op" id="op2" data-op="−">−</button>
+          <button class="op dual sci-op" id="sciCos" data-action="cos"><span class="k-main">cos</span><span class="k-sub">acos</span></button>
         </div>
         <div class="num-row">
           <button class="digit" data-bars="1" data-phone="1" data-digit="1">𝋁</button>
@@ -238,6 +246,7 @@
           <button class="digit" data-bars="3" data-phone="3" data-digit="3">𝋅</button>
           <button class="op side-op" data-op="×">×</button>
           <button class="op" id="op3" data-op="×">×</button>
+          <button class="op dual sci-op" id="sciTan" data-action="tan"><span class="k-main">tan</span><span class="k-sub">eˣ</span></button>
         </div>
         <div class="num-row">
           <button class="digit" data-bars="A" data-phone="A" data-digit="A">𝋐</button>
@@ -245,6 +254,7 @@
           <button class="digit" data-bars="B" data-phone="B" data-digit="B">𝋑</button>
           <button class="op side-op" data-op="÷">÷</button>
           <button class="op" id="op4" data-op="÷">÷</button>
+          <button class="op dual sci-op" id="sciLog" data-action="log12"><span class="k-main">log₁₂</span><span class="k-sub">ln</span></button>
         </div>
       </div>
 
@@ -583,10 +593,35 @@
       } else if (fn === 'inv') {
         if (val === 0) current = 'Error';
         else current = toBase12(1 / val);
-        expression = '1/<span class="op"></span>' + g + ' =';
+        expression = '1/' + g + ' =';
+      } else if (fn === 'sin') {
+        current = toBase12(Math.sin(val));
+        expression = '<span class="op">sin</span> ' + g + ' =';
+      } else if (fn === 'cos') {
+        current = toBase12(Math.cos(val));
+        expression = '<span class="op">cos</span> ' + g + ' =';
+      } else if (fn === 'tan') {
+        const t = Math.tan(val);
+        current = isFinite(t) ? toBase12(t) : 'Error';
+        expression = '<span class="op">tan</span> ' + g + ' =';
+      } else if (fn === 'asin') {
+        current = (val < -1 || val > 1) ? 'Error' : toBase12(Math.asin(val));
+        expression = '<span class="op">asin</span> ' + g + ' =';
+      } else if (fn === 'acos') {
+        current = (val < -1 || val > 1) ? 'Error' : toBase12(Math.acos(val));
+        expression = '<span class="op">acos</span> ' + g + ' =';
+      } else if (fn === 'exp') {
+        current = toBase12(Math.exp(val));
+        expression = '<span class="op">e</span>^' + g + ' =';
+      } else if (fn === 'log12') {
+        current = val <= 0 ? 'Error' : toBase12(Math.log(val) / Math.log(12));
+        expression = '<span class="op">log₁₂</span> ' + g + ' =';
+      } else if (fn === 'ln') {
+        current = val <= 0 ? 'Error' : toBase12(Math.log(val));
+        expression = '<span class="op">ln</span> ' + g + ' =';
       } else return;
       pushTape(expression + ' ' + toKaktovik(current));
-      previous = null; operator = null; fresh = true;
+      previous = null; operator = null; tokens = []; fresh = true; justEvaluated = true;
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
       updateDisplay();
     }
@@ -806,12 +841,20 @@
         else if (btn.dataset.action === 'sign') toggleSign();
         else if (btn.dataset.action === 'dot') inputDigit('.');
         else if (btn.dataset.action === 'inv') applyUnary('inv');
+        else if (btn.dataset.action === 'sin') applyUnary('sin');
+        else if (btn.dataset.action === 'cos') applyUnary('cos');
+        else if (btn.dataset.action === 'tan') applyUnary('tan');
+        else if (btn.dataset.action === 'log12') applyUnary('log12');
+        else if (btn.dataset.action === 'asin') applyUnary('asin');
+        else if (btn.dataset.action === 'acos') applyUnary('acos');
+        else if (btn.dataset.action === 'exp') applyUnary('exp');
+        else if (btn.dataset.action === 'ln') applyUnary('ln');
         else if (btn.dataset.action === 'lparen') openParen();
         else if (btn.dataset.action === 'rparen') closeParen();
         else if (btn.dataset.action === 'mem') memoryAdd();
         else if (btn.dataset.action === 'mr') memoryRecall();
         else if (btn.dataset.action === 'mc') memoryClear();
-        else if (btn.dataset.action === 'mminus') memorySub();
+        else if (btn.dataset.action === 'mminus' || btn.dataset.action === 'msub') memorySub();
       });
     });
     document.getElementById('modeBasic').addEventListener('click', () => setOpMode(false));
@@ -906,8 +949,12 @@
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
       updateDisplay();
     }, 500);
-    bindLongPress(memBtn, memoryRecall, 450);
-    bindLongPress(document.getElementById('memClearBtn'), memorySub, 450);
+    bindLongPress(document.getElementById('sciSin'), () => { if (advancedOps) applyUnary('asin'); }, 450);
+    bindLongPress(document.getElementById('sciCos'), () => { if (advancedOps) applyUnary('acos'); }, 450);
+    bindLongPress(document.getElementById('sciTan'), () => { if (advancedOps) applyUnary('exp'); }, 450);
+    bindLongPress(document.getElementById('sciLog'), () => { if (advancedOps) applyUnary('ln'); }, 450);
+    bindLongPress(memBtn, () => { if (!advancedOps) memoryRecall(); }, 450);
+    bindLongPress(document.getElementById('memClearBtn'), () => { if (advancedOps) memoryClear(); }, 450);
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
