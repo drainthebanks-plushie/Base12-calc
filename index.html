@@ -171,10 +171,10 @@
     .calculator.adv .equals { grid-column: span 3; }
     .side-op, .sci-op { display: none; }
     .calculator.adv .side-op,
-    .calculator.adv .sci-op { display: flex; font-size: 15px; }
-    .calculator.adv button.op { font-size: 15px; }
-    .calculator.adv button.sci-op.dual .k-main { font-size: 11px; }
-    .calculator.adv button.sci-op.dual .k-sub { font-size: 9px; }
+    .calculator.adv .sci-op { display: flex; font-size: 16px; }
+    .calculator.adv button.op { font-size: 16px; }
+    .calculator.adv button.sci-op.dual .k-main { font-size: 14px; }
+    .calculator.adv button.sci-op.dual .k-sub { font-size: 11px; }
     button.dual {
       flex-direction: column; gap: 0; line-height: 1.05; padding: 4px 0;
     }
@@ -182,6 +182,8 @@
     button.dual .k-sub { font-size: 11px; font-weight: 800; opacity: .85; }
     button {
       appearance: none; border: 1px solid #c4ae86; border-radius: 10px; height: 54px;
+      background-color: #f6edd8;
+      background-image: linear-gradient(180deg, rgba(255,255,255,.38) 0%, rgba(255,255,255,0) 46%);
       box-shadow: 0 3px 0 #c4ae86, 0 5px 8px rgba(80,60,30,.14);
       display: flex; align-items: center; justify-content: center;
       font-size: 22px; font-weight: 800; color: var(--ink); cursor: pointer;
@@ -191,7 +193,7 @@
     }
     button:active { transform: translateY(2px); box-shadow: 0 1px 0 #c4ae86; }
     button.digit {
-      background: #f6edd8;
+      background-color: #f6edd8;
       font-family: 'Kaktovik', monospace; font-size: 24px; font-weight: 400;
       color: #5c4a32;
       -webkit-text-stroke: 0.45px #f6edd8;
@@ -203,12 +205,15 @@
       text-shadow: 0.5px 0.5px 0 #8a7350;
     }
     button.op {
-      background: var(--mustard);
-      color: #2a2218; font-weight: 800; font-size: 20px;
+      background-color: var(--mustard);
+      color: #2a2218;
+      font-family: Palatino, "Times New Roman", serif;
+      font-weight: 800;
+      font-size: 16px;
     }
     button.op.active { filter: brightness(1.06); }
     button.fn {
-      background: #f6edd8;
+      background-color: #f6edd8;
       color: #5c4a32; font-size: 16px; font-weight: 800;
     }
     button.fn.has-mem::after {
@@ -217,31 +222,31 @@
     }
     button.fn { position: relative; }
     button.equals {
-      background: var(--terra);
-      color: #f3ead6; font-weight: 800; font-size: 26px;
+      background-color: var(--terra);
+      color: #f3ead6; font-weight: 800; font-size: 16px;
     }
     .c-mustard, .side-op[data-op="+"],
     .calculator.adv #op4, .calculator:not(.adv) #op1, #sciTan {
-      background: var(--mustard) !important; color: #2a2218 !important;
+      background-color: var(--mustard) !important; color: #2a2218 !important;
       border: 1px solid #c4ae86 !important;
       box-shadow: 0 3px 0 #c4ae86, 0 5px 8px rgba(80,60,30,.14) !important;
     }
     .c-sage, .side-op[data-op="−"],
     .calculator.adv #op1, .calculator:not(.adv) #op2 {
-      background: var(--sage) !important; color: #f3ead6 !important;
+      background-color: var(--sage) !important; color: #f3ead6 !important;
       border: 1px solid #c4ae86 !important;
       box-shadow: 0 3px 0 #c4ae86, 0 5px 8px rgba(80,60,30,.14) !important;
     }
     .c-terra, .side-op[data-op="×"],
     .calculator.adv #op2, .calculator:not(.adv) #op3,
     #sciSin, button.equals {
-      background: var(--terra) !important; color: #f3ead6 !important;
+      background-color: var(--terra) !important; color: #f3ead6 !important;
       border: 1px solid #c4ae86 !important;
       box-shadow: 0 3px 0 #c4ae86, 0 5px 8px rgba(80,60,30,.14) !important;
     }
     .c-cobalt, .side-op[data-op="÷"], .calculator:not(.adv) #op4,
     .calculator.adv #op3, #sciCos, #sciLog {
-      background: var(--cobalt) !important; color: #f3ead6 !important;
+      background-color: var(--cobalt) !important; color: #f3ead6 !important;
       border: 1px solid #c4ae86 !important;
       box-shadow: 0 3px 0 #c4ae86, 0 5px 8px rgba(80,60,30,.14) !important;
     }
