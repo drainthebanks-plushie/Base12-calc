@@ -38,31 +38,25 @@
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
     html, body {
-      height: 100%; overflow: hidden; background: #c4b496; color: var(--ink);
+      height: 100%; overflow: hidden; background: #ead9b8 url('bg-animals.jpg') center / cover no-repeat;
+      color: var(--ink);
       font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif;
       -webkit-font-smoothing: antialiased;
     }
     body {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: calc(var(--safe-top) + 8px) 12px calc(var(--safe-bottom) + 8px);
+      padding: calc(var(--safe-top) + 10px) 16px calc(var(--safe-bottom) + 10px);
       min-height: 100dvh;
-      background:
-        radial-gradient(ellipse at 20% 10%, rgba(255,255,255,.25), transparent 50%),
-        repeating-linear-gradient(0deg, rgba(90,70,40,.03) 0 1px, transparent 1px 3px),
-        linear-gradient(165deg, #d7c9ab 0%, #c4b496 55%, #b7a584 100%);
+      background: transparent;
     }
     .calculator {
-      width: 100%; max-width: 390px;
-      background:
-        radial-gradient(circle at 18% 12%, rgba(255,255,255,.35), transparent 40%),
-        repeating-linear-gradient(0deg, rgba(90,70,40,.04) 0 1px, transparent 1px 3px),
-        repeating-linear-gradient(90deg, rgba(90,70,40,.025) 0 1px, transparent 1px 4px),
-        #ead9b8;
+      width: 100%; max-width: 360px;
+      background: rgba(246, 237, 216, 0.22);
       border-radius: 22px; padding: 16px 14px 18px; position: relative;
-      border: 1px solid #cbb892;
+      border: 1px solid rgba(176, 154, 116, .55);
       box-shadow:
-        0 16px 36px rgba(70,50,20,.22),
-        inset 0 1px 0 rgba(255,255,255,.55);
+        0 16px 36px rgba(70,50,20,.28),
+        inset 0 1px 0 rgba(255,255,255,.35);
     }
     .corner-bl, .corner-br { display: none; }
     .brand {
