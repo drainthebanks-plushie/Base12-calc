@@ -98,17 +98,43 @@
       color: #1a1200;
     }
     .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .fun-row, .bot-row, .numpad {
+    .fun-row, .bot-row {
       grid-column: 1 / -1;
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 8px;
     }
+    .numpad {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .num-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
     .calculator.adv .fun-row,
-    .calculator.adv .numpad,
-    .calculator.adv .bot-row {
+    .calculator.adv .bot-row,
+    .calculator.adv .num-row {
       grid-template-columns: 1fr 1fr 1fr 1.1fr 1.1fr;
     }
+    .calculator.flip:not(.adv) .num-row,
+    .calculator.flip:not(.adv) .bot-row {
+      grid-template-columns: 1.1fr 1fr 1fr 1fr;
+    }
+    .calculator.flip.adv .num-row,
+    .calculator.flip.adv .bot-row {
+      grid-template-columns: 1.1fr 1.1fr 1fr 1fr 1fr;
+    }
+    .calculator.flip .num-row .op:not(.side-op) { order: 1; }
+    .calculator.flip .num-row .side-op { order: 2; }
+    .calculator.flip .num-row .digit { order: 3; }
+    .calculator.flip .bot-row .equals { order: 1; }
+    .calculator.flip .bot-row [data-action="backspace"] { order: 2; }
+    .calculator.flip .bot-row [data-action="sign"] { order: 3; }
+    .calculator.flip .bot-row [data-action="dot"] { order: 4; }
     .mem-extra { display: none; }
     .calculator.adv .mem-extra { display: flex; }
     .calculator.adv .equals { grid-column: span 2; }
@@ -192,29 +218,34 @@
       </div>
 
       <div class="numpad" id="numpad">
-        <button class="digit" data-bars="7" data-phone="7" data-digit="7">𝋋</button>
-        <button class="digit" data-bars="8" data-phone="8" data-digit="8">𝋌</button>
-        <button class="digit" data-bars="9" data-phone="9" data-digit="9">𝋏</button>
-        <button class="op side-op" data-op="+">+</button>
-        <button class="op" id="op1" data-op="+">+</button>
-
-        <button class="digit" data-bars="4" data-phone="4" data-digit="4">𝋆</button>
-        <button class="digit" data-bars="5" data-phone="5" data-digit="5">𝋇</button>
-        <button class="digit" data-bars="6" data-phone="6" data-digit="6">𝋊</button>
-        <button class="op side-op" data-op="−">−</button>
-        <button class="op" id="op2" data-op="−">−</button>
-
-        <button class="digit" data-bars="1" data-phone="1" data-digit="1">𝋁</button>
-        <button class="digit" data-bars="2" data-phone="2" data-digit="2">𝋂</button>
-        <button class="digit" data-bars="3" data-phone="3" data-digit="3">𝋅</button>
-        <button class="op side-op" data-op="×">×</button>
-        <button class="op" id="op3" data-op="×">×</button>
-
-        <button class="digit" data-bars="A" data-phone="A" data-digit="A">𝋐</button>
-        <button class="digit" data-bars="0" data-phone="0" data-digit="0">𝋀</button>
-        <button class="digit" data-bars="B" data-phone="B" data-digit="B">𝋑</button>
-        <button class="op side-op" data-op="÷">÷</button>
-        <button class="op" id="op4" data-op="÷">÷</button>
+        <div class="num-row">
+          <button class="digit" data-bars="7" data-phone="7" data-digit="7">𝋋</button>
+          <button class="digit" data-bars="8" data-phone="8" data-digit="8">𝋌</button>
+          <button class="digit" data-bars="9" data-phone="9" data-digit="9">𝋏</button>
+          <button class="op side-op" data-op="+">+</button>
+          <button class="op" id="op1" data-op="+">+</button>
+        </div>
+        <div class="num-row">
+          <button class="digit" data-bars="4" data-phone="4" data-digit="4">𝋆</button>
+          <button class="digit" data-bars="5" data-phone="5" data-digit="5">𝋇</button>
+          <button class="digit" data-bars="6" data-phone="6" data-digit="6">𝋊</button>
+          <button class="op side-op" data-op="−">−</button>
+          <button class="op" id="op2" data-op="−">−</button>
+        </div>
+        <div class="num-row">
+          <button class="digit" data-bars="1" data-phone="1" data-digit="1">𝋁</button>
+          <button class="digit" data-bars="2" data-phone="2" data-digit="2">𝋂</button>
+          <button class="digit" data-bars="3" data-phone="3" data-digit="3">𝋅</button>
+          <button class="op side-op" data-op="×">×</button>
+          <button class="op" id="op3" data-op="×">×</button>
+        </div>
+        <div class="num-row">
+          <button class="digit" data-bars="A" data-phone="A" data-digit="A">𝋐</button>
+          <button class="digit" data-bars="0" data-phone="0" data-digit="0">𝋀</button>
+          <button class="digit" data-bars="B" data-phone="B" data-digit="B">𝋑</button>
+          <button class="op side-op" data-op="÷">÷</button>
+          <button class="op" id="op4" data-op="÷">÷</button>
+        </div>
       </div>
 
       <div class="bot-row">
@@ -828,7 +859,7 @@
         clearHold();
         startY = null;
         if (switched) return;
-        if (dy > 40 && dt < 600) setOpMode(!advancedOps);
+        if (dy > 40 && dt < 600) document.querySelector('.calculator').classList.toggle('flip');
       }
       box.addEventListener('touchstart', e => { if (e.touches.length === 1) begin(e.touches[0].clientY); }, { passive: true });
       box.addEventListener('touchmove', e => { if (e.touches.length) move(e.touches[0].clientY); }, { passive: true });
