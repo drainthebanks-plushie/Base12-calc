@@ -57,6 +57,7 @@
       color: var(--gold); text-transform: uppercase; margin-bottom: 10px; opacity: .9;
     }
     .display {
+      position: relative;
       background: linear-gradient(180deg, #151518 0%, #0c0c0e 100%);
       border-radius: 16px; padding: 12px 14px 12px; margin-bottom: 12px; min-height: 158px;
       display: flex; flex-direction: column; justify-content: flex-end;
@@ -81,8 +82,15 @@
       color: #fff; white-space: nowrap; overflow: hidden; padding-top: 6px;
     }
     .readouts { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 4px; }
-    .mem-flag { margin-right: auto; font-size: 11px; font-weight: 800; color: #c9a227; letter-spacing: .08em; opacity: 0; }
+    .mem-flag {
+      position: absolute; top: 8px; left: 12px; z-index: 2;
+      font-size: 11px; font-weight: 800; color: #c9a227; letter-spacing: .08em; opacity: 0;
+    }
     .mem-flag.on { opacity: 1; }
+    .angle-flag {
+      margin-right: auto; font-size: 11px; font-weight: 800; color: #c9a227;
+      letter-spacing: .08em; padding: 2px 4px; border-radius: 4px;
+    }
     .ascii12 { font-size: 12px; color: #c9a227; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     .decimal-eq { font-size: 12px; color: var(--muted); }
     .mode {
@@ -200,11 +208,12 @@
   <div class="calculator">
     <div class="brand">Base-12 · Kaktovik</div>
     <div class="display" id="displayBox">
+      <div class="mem-flag" id="memFlag">M</div>
       <div class="tape" id="tape"></div>
       <div class="expression" id="expression"></div>
       <div class="main-display" id="display">𝋀</div>
       <div class="readouts">
-        <div class="mem-flag" id="memFlag">M</div>
+        <div class="angle-flag" id="angleFlag">RAD</div>
         <div class="ascii12" id="ascii12">0<sub>12</sub></div>
         <div class="decimal-eq" id="decimal">= 0<sub>10</sub></div>
       </div>
@@ -246,7 +255,7 @@
           <button class="digit" data-bars="3" data-phone="3" data-digit="3">𝋅</button>
           <button class="op side-op" data-op="×">×</button>
           <button class="op" id="op3" data-op="×">×</button>
-          <button class="op dual sci-op" id="sciTan" data-action="tan"><span class="k-main">tan</span><span class="k-sub">eˣ</span></button>
+          <button class="op sci-op" id="sciTan" data-action="tan">tan</button>
         </div>
         <div class="num-row">
           <button class="digit" data-bars="A" data-phone="A" data-digit="A">𝋐</button>
@@ -279,6 +288,7 @@
     let justEvaluated = false;
     let phonePad = false;
     let rightShown = false;
+    let angleDeg = false;
     const tapeLines = [];
     const parenStack = [];
 
@@ -360,7 +370,7 @@
     function toBase12(num, maxFrac = 6) {
       if (!isFinite(num)) return 'Error';
       if (Math.abs(num) < 1e-15) return '0';
-      const MAX_DIGITS = 8;
+      const MAX_DIGITS = 10;
       const abs = Math.abs(num);
       const exp10 = Math.log(abs) / Math.log(12);
       const exp = Math.floor(exp10 + 1e-12);
@@ -382,6 +392,12 @@
         return (num < 0 ? '-' : '') + mStr + 'e' + (exp < 0 ? '-' : '') + eStr;
       }
       return toBase12Plain(num, maxFrac);
+    }
+    function formatResult(num) {
+      if (!isFinite(num)) return 'Error';
+      const a = Math.abs(num);
+      if (Math.abs(a - Math.PI) < 1e-12 || Math.abs(a - TAU) < 1e-12) return toBase12(num, 8);
+      return toBase12(num, 6);
     }
     function formatDecimal(n) {
       if (!isFinite(n)) return 'Error';
@@ -414,6 +430,8 @@
       ascii12El.innerHTML = current + '<sub>12</sub>';
       decimalEl.innerHTML = '= ' + formatDecimal(parseBase12(current)) + '<sub>10</sub>';
       expressionEl.innerHTML = expression || renderTokens();
+      const ang = document.getElementById('angleFlag');
+      if (ang) ang.textContent = angleDeg ? 'DEG' : 'RAD';
       memBtn.classList.toggle('has-mem', memory !== 0);
       const flag = document.getElementById('memFlag');
       if (flag) flag.classList.toggle('on', memory !== 0);
@@ -557,12 +575,15 @@
         opButtons[0].innerHTML = '<span class="k-main">mod</span><span class="k-sub">%</span>';
         opButtons[0].dataset.op = '%';
         opButtons[1].textContent = '√';   opButtons[1].dataset.op = 'sqrt';
-        opButtons[2].textContent = '^';   opButtons[2].dataset.op = '^';
+        opButtons[2].classList.add('dual');
+        opButtons[2].innerHTML = '<span class="k-main">^</span><span class="k-sub">eˣ</span>';
+        opButtons[2].dataset.op = '^';
         opButtons[3].classList.add('dual');
         opButtons[3].innerHTML = '<span class="k-main">Tau</span><span class="k-sub">π</span>';
         opButtons[3].dataset.op = 'tau';
       } else {
         opButtons[0].classList.remove('dual');
+        opButtons[2].classList.remove('dual');
         opButtons[3].classList.remove('dual');
         opButtons[0].textContent = '+'; opButtons[0].dataset.op = '+';
         opButtons[1].textContent = '−'; opButtons[1].dataset.op = '−';
@@ -584,42 +605,30 @@
         default: return b;
       }
     }
+    function toRad(v) { return angleDeg ? v * Math.PI / 180 : v; }
+    function fromRad(v) { return angleDeg ? v * 180 / Math.PI : v; }
     function applyUnary(fn) {
       const val = parseBase12(current);
       const g = toKaktovik(current);
-      if (fn === 'sqrt') {
-        if (val < 0) { current = 'Error'; expression = '<span class="op">√</span>' + g + ' ='; }
-        else { current = toBase12(Math.sqrt(val)); expression = '<span class="op">√</span>' + g + ' ='; }
-      } else if (fn === 'inv') {
-        if (val === 0) current = 'Error';
-        else current = toBase12(1 / val);
-        expression = '1/' + g + ' =';
-      } else if (fn === 'sin') {
-        current = toBase12(Math.sin(val));
-        expression = '<span class="op">sin</span> ' + g + ' =';
-      } else if (fn === 'cos') {
-        current = toBase12(Math.cos(val));
-        expression = '<span class="op">cos</span> ' + g + ' =';
-      } else if (fn === 'tan') {
-        const t = Math.tan(val);
-        current = isFinite(t) ? toBase12(t) : 'Error';
-        expression = '<span class="op">tan</span> ' + g + ' =';
-      } else if (fn === 'asin') {
-        current = (val < -1 || val > 1) ? 'Error' : toBase12(Math.asin(val));
-        expression = '<span class="op">asin</span> ' + g + ' =';
-      } else if (fn === 'acos') {
-        current = (val < -1 || val > 1) ? 'Error' : toBase12(Math.acos(val));
-        expression = '<span class="op">acos</span> ' + g + ' =';
-      } else if (fn === 'exp') {
-        current = toBase12(Math.exp(val));
-        expression = '<span class="op">e</span>^' + g + ' =';
-      } else if (fn === 'log12') {
-        current = val <= 0 ? 'Error' : toBase12(Math.log(val) / Math.log(12));
-        expression = '<span class="op">log₁₂</span> ' + g + ' =';
-      } else if (fn === 'ln') {
-        current = val <= 0 ? 'Error' : toBase12(Math.log(val));
-        expression = '<span class="op">ln</span> ' + g + ' =';
-      } else return;
+      const labels = {
+        sqrt: '√', inv: '1/x', sin: 'sin', cos: 'cos', tan: 'tan',
+        asin: 'asin', acos: 'acos', exp: 'eˣ', log12: 'log₁₂', ln: 'ln'
+      };
+      const label = labels[fn];
+      if (!label) return;
+      let out;
+      if (fn === 'sqrt') out = val < 0 ? NaN : Math.sqrt(val);
+      else if (fn === 'inv') out = val === 0 ? NaN : 1 / val;
+      else if (fn === 'sin') out = Math.sin(toRad(val));
+      else if (fn === 'cos') out = Math.cos(toRad(val));
+      else if (fn === 'tan') out = Math.tan(toRad(val));
+      else if (fn === 'asin') out = (val < -1 || val > 1) ? NaN : fromRad(Math.asin(val));
+      else if (fn === 'acos') out = (val < -1 || val > 1) ? NaN : fromRad(Math.acos(val));
+      else if (fn === 'exp') out = Math.exp(val);
+      else if (fn === 'log12') out = val <= 0 ? NaN : Math.log(val) / Math.log(12);
+      else if (fn === 'ln') out = val <= 0 ? NaN : Math.log(val);
+      current = isFinite(out) ? formatResult(out) : 'Error';
+      expression = '<span class="op">' + label + '</span> ' + g + ' =';
       pushTape(expression + ' ' + toKaktovik(current));
       previous = null; operator = null; tokens = []; fresh = true; justEvaluated = true;
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
@@ -704,7 +713,7 @@
       else if (op && leftVal !== null) result = compute(leftVal, op, rightVal);
       else result = rightVal;
       if (!isFinite(result)) current = 'Error';
-      else current = toBase12(result);
+      else current = formatResult(result);
       if (tokens.length) {
         expression = tokens.map(tokenGlyph).join(' ') + ' =';
       } else if (op && leftVal !== null) {
@@ -883,6 +892,15 @@
       else if (key === 'Backspace') backspace();
     });
 
+    ['click', 'touchstart', 'touchend', 'mousedown'].forEach(ev => {
+      document.getElementById('angleFlag').addEventListener(ev, e => {
+        e.stopPropagation();
+        if (ev === 'click' || ev === 'touchend') {
+          if (ev === 'click') { angleDeg = !angleDeg; updateDisplay(); }
+        }
+      }, { passive: true });
+    });
+
     (function () {
       const box = document.getElementById('displayBox');
       let startY = null, startT = 0, holdTimer = null, switched = false;
@@ -951,7 +969,9 @@
     }, 500);
     bindLongPress(document.getElementById('sciSin'), () => { if (advancedOps) applyUnary('asin'); }, 450);
     bindLongPress(document.getElementById('sciCos'), () => { if (advancedOps) applyUnary('acos'); }, 450);
-    bindLongPress(document.getElementById('sciTan'), () => { if (advancedOps) applyUnary('exp'); }, 450);
+    bindLongPress(document.getElementById('op3'), () => {
+      if (advancedOps && document.getElementById('op3').dataset.op === '^') applyUnary('exp');
+    }, 450);
     bindLongPress(document.getElementById('sciLog'), () => { if (advancedOps) applyUnary('ln'); }, 450);
     bindLongPress(memBtn, () => { if (!advancedOps) memoryRecall(); }, 450);
     bindLongPress(document.getElementById('memClearBtn'), () => { if (advancedOps) memoryClear(); }, 450);
