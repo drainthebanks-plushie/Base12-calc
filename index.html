@@ -370,6 +370,7 @@
     }
     function toBase12(num, maxFrac = 6) {
       if (!isFinite(num)) return 'Error';
+      num = snapDozenal(num);
       if (Math.abs(num) < 1e-15) return '0';
       const MAX_DIGITS = 10;
       const abs = Math.abs(num);
@@ -401,7 +402,7 @@
       const tryDen = [12, 144, 1728];
       for (const den of tryDen) {
         const n = Math.round(a * den);
-        if (Math.abs(a - n / den) < 1e-10) return sign * n / den;
+        if (Math.abs(a - n / den) < 1e-6) return sign * n / den;
       }
       return num;
     }
@@ -684,10 +685,10 @@
           result = operator === '+' ? base + pct : base - pct;
         } else result = compute(base, operator, val / HUNDRED12);
         expression = toKaktovik(toBase12(base)) + ' <span class="op">' + opSymbol(operator) + '</span> ' + curGlyphs + '<span class="op">%</span> =';
-        current = toBase12(result);
+        current = formatResult(result);
       } else {
         expression = curGlyphs + '<span class="op">%</span> =';
-        current = toBase12(val / HUNDRED12);
+        current = formatResult(val / HUNDRED12);
       }
       previous = null; operator = null; fresh = true;
       pushTape(expression + ' ' + toKaktovik(current));
@@ -810,7 +811,7 @@
       }
       if (start >= 0) {
         const inner = evalExpr(tokens.slice(start + 1, tokens.length - 1));
-        if (isFinite(inner)) current = toBase12(inner);
+        if (isFinite(inner)) current = formatResult(inner);
       }
       fresh = true;
       rightShown = false;
@@ -822,7 +823,7 @@
       updateDisplay();
     }
     function memoryRecall() {
-      const memStr = toBase12(memory);
+      const memStr = formatResult(memory);
       current = memStr;
       fresh = true;
       if (isConstTok(lastTok())) {
