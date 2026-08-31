@@ -341,7 +341,7 @@
     const HUNDRED12 = 144;
 
     let current = '0', previous = null, operator = null, fresh = true, expression = '';
-    let advancedOps = false, memory = 0, undoEntry = null;
+    let advancedOps = false, memory = 0;
     let groupedCurrent = false, powerBaseGrouped = false;
     let tokens = [];
     let justEvaluated = false;
@@ -349,7 +349,6 @@
     let rightShown = false;
     let angleDeg = false;
     const tapeLines = [];
-    const parenStack = [];
 
     const displayEl = document.getElementById('display');
     const expressionEl = document.getElementById('expression');
@@ -515,6 +514,7 @@
       if (fn === 'inv') return '1/x';
       if (fn === 'log12') return 'log₁₂';
       if (fn === 'sqrt') return '√';
+      if (fn === 'exp') return 'eˣ';
       return fn;
     }
     function tokenGlyph(tok) {
@@ -536,6 +536,7 @@
     }
     function flushNumber() {
       if (!fresh && current !== '' && current !== 'Error') {
+        implicitMul();
         tokens.push(current);
         fresh = true;
       }
@@ -544,7 +545,32 @@
     function isOpTok(t) { return t === '+' || t === '−' || t === '×' || t === '÷' || t === '^' || t === '%'; }
     function isFnTok(t) {
       return t === 'sin' || t === 'cos' || t === 'tan' || t === 'asin' || t === 'acos' ||
-        t === 'log12' || t === 'ln' || t === '√' || t === 'sqrt' || t === 'inv';
+        t === 'log12' || t === 'ln' || t === '√' || t === 'sqrt' || t === 'inv' || t === 'exp';
+    }
+    function isAtomEnd(t) {
+      return t === ')' || isConstTok(t) || (!!t && !isOpTok(t) && t !== '(' && !isFnTok(t));
+    }
+    function parenDepthOf(src) {
+      let d = 0;
+      for (const t of src) {
+        if (t === '(') d++;
+        else if (t === ')') {
+          d--;
+          if (d < 0) return -1;
+        }
+      }
+      return d;
+    }
+    function findGroupStart(src) {
+      let depth = 0;
+      for (let i = src.length - 1; i >= 0; i--) {
+        if (src[i] === ')') depth++;
+        else if (src[i] === '(') {
+          depth--;
+          if (depth === 0) return i;
+        }
+      }
+      return -1;
     }
     function isConstTok(t) { return t === 'π' || t === 'τ' || t === 'e' || t === '-π' || t === '-τ' || t === '-e'; }
     function constValue(t) {
@@ -571,8 +597,10 @@
       return val;
     }
     function parseAtom(src, i) {
-      if (i >= src.length) return { v: 0, g: false, i: i };
+      if (i >= src.length) return { v: NaN, g: false, i: i };
+      if (src[i] === ')') return { v: NaN, g: false, i: i + 1 };
       if (isFnTok(src[i])) {
+        if (i + 1 >= src.length) return { v: NaN, g: true, i: i + 1 };
         const arg = parseAtom(src, i + 1);
         return { v: evalFn(src[i], arg.v), g: true, i: arg.i };
       }
@@ -583,7 +611,10 @@
           else if (src[j] === ')') depth--;
           j++;
         }
-        return { v: evalExpr(src.slice(i + 1, j - 1)), g: true, i: j };
+        if (depth !== 0) return { v: NaN, g: true, i: src.length };
+        const inner = src.slice(i + 1, j - 1);
+        if (!inner.length) return { v: NaN, g: true, i: j };
+        return { v: evalExpr(inner), g: true, i: j };
       }
       if (src[i] === 'τ') return { v: TAU, g: true, i: i + 1 };
       if (src[i] === '-τ') return { v: -TAU, g: true, i: i + 1 };
@@ -594,16 +625,24 @@
       return { v: parseBase12(src[i]), g: false, i: i + 1 };
     }
     function evalExpr(src) {
+      if (!src || !src.length) return NaN;
+      if (parenDepthOf(src) !== 0) return NaN;
       const list = [];
       let i = 0;
       while (i < src.length) {
-        if (isOpTok(src[i])) { list.push(src[i]); i++; }
-        else {
+        if (isOpTok(src[i])) {
+          if (!list.length || isOpTok(list[list.length - 1])) return NaN;
+          list.push(src[i]);
+          i++;
+        } else {
           const atom = parseAtom(src, i);
+          if (!isFinite(atom.v) && atom.v !== 0) return NaN;
+          if (list.length && typeof list[list.length - 1] === 'object') list.push('×');
           list.push({ v: atom.v, g: atom.g });
           i = atom.i;
         }
       }
+      if (!list.length || isOpTok(list[list.length - 1])) return NaN;
       const prec = { '^': 3, '×': 2, '÷': 2, '%': 2, '+': 1, '−': 1 };
       const right = { '^': true };
       const out = [], ops = [];
@@ -635,7 +674,6 @@
       return st.length ? st[0].v : 0;
     }
     function inputDigit(d) {
-      undoEntry = null;
       groupedCurrent = false;
       if (justEvaluated && !operator && tokens.length === 0) {
         tokens = [];
@@ -650,6 +688,8 @@
         tokens.push('^');
         operator = '^';
         previous = constValue(lastTok());
+      } else if (fresh && isAtomEnd(lastTok())) {
+        implicitMul();
       }
       if (d === '.') {
         if (fresh) { current = '0.'; fresh = false; }
@@ -782,32 +822,46 @@
     function insertTau() { insertConst('τ'); }
     function insertPi() { insertConst('π'); }
     function insertE() { insertConst('e'); }
+    function applyFnToValue(fn, srcStr) {
+      const srcGlyphs = toKaktovik(srcStr);
+      const out = evalFn(fn, parseBase12(srcStr));
+      current = isFinite(out) ? formatResult(out) : 'Error';
+      groupedCurrent = true;
+      fresh = true;
+      justEvaluated = tokens.length === 0;
+      const step = '<span class="op">' + fnLabel(fn) + '</span> ' + srcGlyphs + ' = ' + toKaktovik(current);
+      expression = step;
+      pushTape(step);
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+      updateDisplay();
+    }
     function insertFn(fn) {
       const hasNum = current && current !== 'Error' && current !== '' && current !== '0' && current !== '-0';
       if (!fresh && hasNum) {
-        const srcGlyphs = toKaktovik(current);
-        const out = evalFn(fn, parseBase12(current));
-        current = isFinite(out) ? formatResult(out) : 'Error';
-        groupedCurrent = true;
-        justEvaluated = false;
-        const step = '<span class="op">' + fnLabel(fn) + '</span> ' + srcGlyphs + ' = ' + toKaktovik(current);
-        expression = step;
-        pushTape(step);
-        document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
-        updateDisplay();
+        applyFnToValue(fn, current);
         return;
       }
       if (justEvaluated && tokens.length === 0 && current && current !== 'Error') {
-        const srcGlyphs = toKaktovik(current);
-        const out = evalFn(fn, parseBase12(current));
-        current = isFinite(out) ? formatResult(out) : 'Error';
-        fresh = true;
-        const step = '<span class="op">' + fnLabel(fn) + '</span> ' + srcGlyphs + ' = ' + toKaktovik(current);
-        expression = step;
-        pushTape(step);
-        document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
-        updateDisplay();
+        applyFnToValue(fn, current);
         return;
+      }
+      if (lastTok() === ')') {
+        const start = findGroupStart(tokens);
+        if (start >= 0) {
+          tokens.splice(start, 0, fn);
+          const inner = evalExpr(tokens.slice(start));
+          if (isFinite(inner)) current = formatResult(inner);
+          else current = 'Error';
+          groupedCurrent = true;
+          justEvaluated = false;
+          fresh = true;
+          rightShown = false;
+          operator = null;
+          expression = renderTokens();
+          document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+          updateDisplay();
+          return;
+        }
       }
       justEvaluated = false;
       flushNumber();
@@ -822,7 +876,6 @@
       updateDisplay();
     }
     function applyPercent() {
-      undoEntry = { current, previous, operator, expression, fresh };
       const val = parseBase12(current);
       const curGlyphs = toKaktovik(current);
       if (previous !== null && operator && operator !== '%') {
@@ -871,7 +924,17 @@
       const leftVal = previous;
       const op = operator;
       flushNumber();
-      if (isOpTok(lastTok()) && !(fresh && (rightStr === '0' || rightStr === '-0'))) tokens.push(rightStr);
+      if (isOpTok(lastTok()) && rightShown) tokens.push(rightStr);
+      if (tokens.length && parenDepthOf(tokens) !== 0) {
+        current = 'Error';
+        expression = tokens.map(tokenGlyph).join(' ') + ' =';
+        pushTape(expression + ' Error');
+        tokens = [];
+        previous = null; operator = null; fresh = true; justEvaluated = true; rightShown = false;
+        document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+        updateDisplay();
+        return;
+      }
       let result;
       if (tokens.length) result = evalExpr(tokens);
       else if (op && leftVal !== null) result = compute(leftVal, op, rightVal);
@@ -922,9 +985,17 @@
         updateDisplay();
         return;
       }
+      if (fresh && (isOpTok(lastTok()) || lastTok() === '(' || isFnTok(lastTok()))) {
+        current = '-0';
+        fresh = false;
+        rightShown = true;
+        expression = renderTokens();
+        updateDisplay();
+        return;
+      }
       if (justEvaluated) { tokens = []; justEvaluated = false; }
       if (current.startsWith('-')) current = current.slice(1) || '0';
-      else if (current === '0') current = '0';
+      else if (current === '0' || current === '-0') current = current === '-0' ? '0' : '-0';
       else current = '-' + current;
       expression = renderTokens();
       updateDisplay();
@@ -947,19 +1018,23 @@
     }
     function closeParen() {
       flushNumber();
-      if (lastTok() !== ')') tokens.push(')');
-      groupedCurrent = true;
-      let depth = 0, start = -1;
-      for (let i = tokens.length - 1; i >= 0; i--) {
-        if (tokens[i] === ')') depth++;
-        else if (tokens[i] === '(') {
-          depth--;
-          if (depth === 0) { start = i; break; }
-        }
+      if (parenDepthOf(tokens) <= 0) {
+        expression = renderTokens();
+        updateDisplay();
+        return;
       }
+      if (lastTok() === '(' || isOpTok(lastTok()) || isFnTok(lastTok())) {
+        expression = renderTokens();
+        updateDisplay();
+        return;
+      }
+      tokens.push(')');
+      groupedCurrent = true;
+      const start = findGroupStart(tokens);
       if (start >= 0) {
         const inner = evalExpr(tokens.slice(start + 1, tokens.length - 1));
         if (isFinite(inner)) current = formatResult(inner);
+        else current = 'Error';
       }
       fresh = true;
       rightShown = false;
@@ -972,23 +1047,40 @@
     }
     function memoryRecall() {
       const memStr = formatResult(memory);
-      current = memStr;
-      fresh = true;
-      if (isConstTok(lastTok())) {
+      const midExpr = tokens.length > 0 && (isOpTok(lastTok()) || lastTok() === '(' || isFnTok(lastTok()) || isConstTok(lastTok()));
+      const afterValue = tokens.length > 0 && isAtomEnd(lastTok()) && !justEvaluated;
+      if (!midExpr && !afterValue) {
+        tokens = [];
+        current = memStr;
+        fresh = true;
+        justEvaluated = true;
+        rightShown = false;
+        operator = null;
+        previous = null;
+        expression = renderTokens();
+        updateDisplay();
+        return;
+      }
+      if (isConstTok(lastTok()) && (fresh || current === '0' || current === '-0')) {
         tokens.push('^');
+        tokens.push(memStr);
+        current = memStr;
+        fresh = true;
         rightShown = true;
         justEvaluated = false;
         operator = '^';
-        previous = lastTok() === '^' ? constValue(tokens[tokens.length - 2]) : previous;
-      } else if (operator) {
-        rightShown = true;
-        justEvaluated = false;
-        if (!tokens.length) tokens = [];
-      } else {
-        tokens = [];
-        justEvaluated = true;
-        rightShown = false;
+        previous = constValue(tokens[tokens.length - 3]);
+        expression = renderTokens();
+        updateDisplay();
+        return;
       }
+      flushNumber();
+      implicitMul();
+      tokens.push(memStr);
+      current = memStr;
+      fresh = true;
+      rightShown = true;
+      justEvaluated = false;
       expression = renderTokens();
       updateDisplay();
     }
@@ -1020,7 +1112,7 @@
         else if (btn.dataset.action === 'log12') insertFn('log12');
         else if (btn.dataset.action === 'asin') insertFn('asin');
         else if (btn.dataset.action === 'acos') insertFn('acos');
-        else if (btn.dataset.action === 'exp') insertE();
+        else if (btn.dataset.action === 'exp') insertFn('exp');
         else if (btn.dataset.action === 'ln') insertFn('ln');
         else if (btn.dataset.action === 'lparen') openParen();
         else if (btn.dataset.action === 'rparen') closeParen();
@@ -1049,7 +1141,7 @@
       else if (key === ')') closeParen();
       else if (key === 'Enter' || key === '=') equals();
       else if (key === 'Escape' || key === 'c' || key === 'C') {
-        current = '0'; previous = null; operator = null; expression = ''; fresh = true; undoEntry = null; tokens = []; justEvaluated = false;
+        current = '0'; previous = null; operator = null; expression = ''; fresh = true; tokens = []; justEvaluated = false;
         document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
         updateDisplay();
       }
@@ -1127,7 +1219,7 @@
       if (advancedOps && document.getElementById('op1').dataset.op === '%') applyPercent();
     }, 450);
     bindLongPress(document.querySelector('[data-action=backspace]'), () => {
-      current = '0'; previous = null; operator = null; expression = ''; fresh = true; undoEntry = null; tokens = []; justEvaluated = false;
+      current = '0'; previous = null; operator = null; expression = ''; fresh = true; tokens = []; justEvaluated = false;
       if (tapeLines.length > 1) {
         tapeLines.splice(0, tapeLines.length - 1);
         tapeEl.innerHTML = '<div>' + tapeLines[0] + '</div>';
@@ -1138,7 +1230,7 @@
     bindLongPress(document.getElementById('sciSin'), () => { if (advancedOps) insertFn('asin'); }, 450);
     bindLongPress(document.getElementById('sciCos'), () => { if (advancedOps) insertFn('acos'); }, 450);
     bindLongPress(document.getElementById('op3'), () => {
-      if (advancedOps && document.getElementById('op3').dataset.op === '^') insertE();
+      if (advancedOps && document.getElementById('op3').dataset.op === '^') insertFn('exp');
     }, 450);
     bindLongPress(document.getElementById('sciLog'), () => { if (advancedOps) insertFn('ln'); }, 450);
     bindLongPress(memBtn, () => { if (!advancedOps) memoryRecall(); }, 450);
