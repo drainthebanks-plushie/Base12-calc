@@ -37,19 +37,65 @@
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+    html {
+      height: 100%;
+      height: -webkit-fill-available;
+      height: 100dvh;
+      height: var(--app-h, 100dvh);
+    }
     html, body {
-      height: 100%; overflow: hidden; background: #c4b496; color: var(--ink);
+      overflow: hidden; color: var(--ink);
       font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif;
       -webkit-font-smoothing: antialiased;
+      background: #6a4a24;
     }
     body {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       padding: calc(var(--safe-top) + 8px) 12px calc(var(--safe-bottom) + 8px);
+      min-height: 100%;
+      min-height: -webkit-fill-available;
       min-height: 100dvh;
+      min-height: var(--app-h, 100dvh);
+      height: var(--app-h, 100dvh);
+      position: relative;
+      background: transparent;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-color: #6e4c26;
+      background-image:
+        repeating-linear-gradient(76deg,
+          rgba(42,26,10,.55) 0 1px,
+          rgba(196,150,72,.28) 1px 3px,
+          rgba(120,82,36,.2) 3px 6px,
+          rgba(58,36,14,.4) 6px 7px,
+          rgba(168,126,58,.18) 7px 11px),
+        repeating-linear-gradient(-74deg,
+          rgba(30,18,8,.4) 0 1px,
+          rgba(210,168,88,.16) 1px 4px,
+          transparent 4px 8px),
+        repeating-linear-gradient(180deg,
+          rgba(28,16,6,.5) 0 1px,
+          transparent 1px 15px,
+          rgba(90,58,22,.35) 15px 17px,
+          rgba(40,24,10,.2) 17px 32px),
+        linear-gradient(165deg, #8a6232 0%, #6a4824 48%, #4e3418 100%);
+      background-size: 100% 100%, 100% 100%, 100% 32px, 100% 100%;
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
       background:
-        radial-gradient(ellipse at 20% 10%, rgba(255,255,255,.25), transparent 50%),
-        repeating-linear-gradient(0deg, rgba(90,70,40,.03) 0 1px, transparent 1px 3px),
-        linear-gradient(165deg, #d7c9ab 0%, #c4b496 55%, #b7a584 100%);
+        radial-gradient(ellipse at 50% 0%, rgba(255,230,170,.12), transparent 55%),
+        repeating-linear-gradient(90deg, rgba(20,10,0,.08) 0 2px, transparent 2px 7px);
+      mix-blend-mode: multiply;
     }
     .calculator {
       width: 100%; max-width: 390px;
@@ -1146,6 +1192,18 @@
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+    function fitViewport() {
+      const vv = window.visualViewport;
+      const h = Math.round((vv && vv.height) || window.innerHeight);
+      document.documentElement.style.setProperty('--app-h', h + 'px');
+    }
+    fitViewport();
+    window.addEventListener('resize', fitViewport);
+    window.addEventListener('orientationchange', () => setTimeout(fitViewport, 80));
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', fitViewport);
+      window.visualViewport.addEventListener('scroll', fitViewport);
     }
     updateDisplay();
   </script>
