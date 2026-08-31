@@ -78,11 +78,12 @@
       cursor: pointer; user-select: none; -webkit-user-select: none;
     }
     .tape {
-      min-height: 22px; max-height: 26px; overflow: visible;
+      min-height: 22px; max-height: 26px; overflow: hidden;
       font-size: 13px; color: #9a8b72; text-align: right; line-height: 1.55;
       font-family: 'Kaktovik', ui-monospace, monospace; white-space: nowrap;
       padding-top: 4px;
     }
+    .tape div { overflow: hidden; text-overflow: ellipsis; }
     .expression {
       font-size: 14px; color: var(--muted); text-align: right; min-height: 24px;
       font-family: 'Kaktovik', monospace; margin: 4px 0 4px; line-height: 1.55;
@@ -486,7 +487,9 @@
     }
     function pushTape(html) {
       if (!html) return;
-      tapeEl.innerHTML = html;
+      tapeLines.push(html);
+      if (tapeLines.length > 6) tapeLines.shift();
+      tapeEl.innerHTML = '<div>' + tapeLines[tapeLines.length - 1] + '</div>';
     }
     function updateDisplay() {
       const text = toKaktovik(current);
@@ -782,20 +785,26 @@
     function insertFn(fn) {
       const hasNum = current && current !== 'Error' && current !== '' && current !== '0' && current !== '-0';
       if (!fresh && hasNum) {
+        const srcGlyphs = toKaktovik(current);
         const out = evalFn(fn, parseBase12(current));
         current = isFinite(out) ? formatResult(out) : 'Error';
         groupedCurrent = true;
         justEvaluated = false;
-        expression = renderTokens();
+        const step = '<span class="op">' + fnLabel(fn) + '</span> ' + srcGlyphs + ' = ' + toKaktovik(current);
+        expression = step;
+        pushTape(step);
         document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
         updateDisplay();
         return;
       }
       if (justEvaluated && tokens.length === 0 && current && current !== 'Error') {
+        const srcGlyphs = toKaktovik(current);
         const out = evalFn(fn, parseBase12(current));
         current = isFinite(out) ? formatResult(out) : 'Error';
         fresh = true;
-        expression = '<span class="op">' + fnLabel(fn) + '</span>';
+        const step = '<span class="op">' + fnLabel(fn) + '</span> ' + srcGlyphs + ' = ' + toKaktovik(current);
+        expression = step;
+        pushTape(step);
         document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
         updateDisplay();
         return;
@@ -1119,6 +1128,10 @@
     }, 450);
     bindLongPress(document.querySelector('[data-action=backspace]'), () => {
       current = '0'; previous = null; operator = null; expression = ''; fresh = true; undoEntry = null; tokens = []; justEvaluated = false;
+      if (tapeLines.length > 1) {
+        tapeLines.splice(0, tapeLines.length - 1);
+        tapeEl.innerHTML = '<div>' + tapeLines[0] + '</div>';
+      }
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
       updateDisplay();
     }, 500);
