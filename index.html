@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Base-12" />
-  <meta name="theme-color" content="#4e483c" />
+  <meta name="theme-color" content="#c4b496" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-180.png" />
   <title>Base-12 Calculator</title>
@@ -38,37 +38,18 @@
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
     html, body {
-      height: 100%; overflow: hidden; color: var(--ink);
+      height: 100%; overflow: hidden; background: #c4b496; color: var(--ink);
       font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif;
       -webkit-font-smoothing: antialiased;
-      background-color: #4e483c;
-      background-image:
-        repeating-linear-gradient(
-          0deg,
-          #585244 0px,
-          #585244 5px,
-          #3f3a31 5px,
-          #3f3a31 7px,
-          transparent 7px,
-          transparent 14px
-        ),
-        repeating-linear-gradient(
-          90deg,
-          #454035 0px,
-          #454035 5px,
-          #353128 5px,
-          #353128 7px,
-          transparent 7px,
-          transparent 14px
-        );
-      background-size: 14px 14px;
-      background-attachment: fixed;
-      background-repeat: repeat;
     }
     body {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       padding: calc(var(--safe-top) + 8px) 12px calc(var(--safe-bottom) + 8px);
       min-height: 100dvh;
+      background:
+        radial-gradient(ellipse at 20% 10%, rgba(255,255,255,.25), transparent 50%),
+        repeating-linear-gradient(0deg, rgba(90,70,40,.03) 0 1px, transparent 1px 3px),
+        linear-gradient(165deg, #d7c9ab 0%, #c4b496 55%, #b7a584 100%);
     }
     .calculator {
       width: 100%; max-width: 390px;
@@ -527,12 +508,18 @@
       const flag = document.getElementById('memFlag');
       if (flag) flag.classList.toggle('on', memory !== 0);
     }
+    function fnLabel(fn) {
+      if (fn === 'inv') return '1/x';
+      if (fn === 'log12') return 'log₁₂';
+      if (fn === 'sqrt') return '√';
+      return fn;
+    }
     function tokenGlyph(tok) {
-      if ('+−×÷^%()'.indexOf(tok) !== -1 || tok === 'τ' || tok === 'π' || tok === '-τ' || tok === '-π' || tok === '√') {
+      if (isFnTok(tok) || '+−×÷^%()'.indexOf(tok) !== -1 || tok === 'τ' || tok === 'π' || tok === 'e' || tok === '-τ' || tok === '-π' || tok === '-e' || tok === '√') {
         if (tok === '%') return '<span class="op">mod</span>';
         if ('+−×÷^'.indexOf(tok) !== -1) return '<span class="op">' + tok + '</span>';
-        if (tok === '-π' || tok === '-τ') return '<span class="op">−' + tok.slice(1) + '</span>';
-        if (tok === 'τ' || tok === 'π' || tok === '√') return '<span class="op">' + tok + '</span>';
+        if (tok === '-π' || tok === '-τ' || tok === '-e') return '<span class="op">−' + tok.slice(1) + '</span>';
+        if (isFnTok(tok) || tok === 'τ' || tok === 'π' || tok === 'e' || tok === '√') return '<span class="op">' + fnLabel(tok) + '</span>';
         return tok;
       }
       return toKaktovik(tok);
@@ -552,29 +539,67 @@
     }
     function lastTok() { return tokens.length ? tokens[tokens.length - 1] : ''; }
     function isOpTok(t) { return t === '+' || t === '−' || t === '×' || t === '÷' || t === '^' || t === '%'; }
-    function isConstTok(t) { return t === 'π' || t === 'τ' || t === '-π' || t === '-τ'; }
+    function isFnTok(t) {
+      return t === 'sin' || t === 'cos' || t === 'tan' || t === 'asin' || t === 'acos' ||
+        t === 'log12' || t === 'ln' || t === '√' || t === 'sqrt' || t === 'inv';
+    }
+    function isConstTok(t) { return t === 'π' || t === 'τ' || t === 'e' || t === '-π' || t === '-τ' || t === '-e'; }
+    function constValue(t) {
+      if (t === 'π' || t === '-π') return t.charAt(0) === '-' ? -Math.PI : Math.PI;
+      if (t === 'e' || t === '-e') return t.charAt(0) === '-' ? -Math.E : Math.E;
+      return t.charAt(0) === '-' ? -TAU : TAU;
+    }
     function implicitMul() {
       const last = lastTok();
-      if (last === ')' || isConstTok(last) || (last && !isOpTok(last) && last !== '(')) tokens.push('×');
+      if (!last || isOpTok(last) || last === '(' || isFnTok(last)) return;
+      tokens.push('×');
+    }
+    function evalFn(fn, val) {
+      if (fn === '√' || fn === 'sqrt') return val < 0 ? NaN : Math.sqrt(val);
+      if (fn === 'inv') return val === 0 ? NaN : 1 / val;
+      if (fn === 'sin') return Math.sin(toRad(val));
+      if (fn === 'cos') return Math.cos(toRad(val));
+      if (fn === 'tan') return Math.tan(toRad(val));
+      if (fn === 'asin') return (val < -1 || val > 1) ? NaN : fromRad(Math.asin(val));
+      if (fn === 'acos') return (val < -1 || val > 1) ? NaN : fromRad(Math.acos(val));
+      if (fn === 'exp') return Math.exp(val);
+      if (fn === 'log12') return val <= 0 ? NaN : Math.log(val) / Math.log(12);
+      if (fn === 'ln') return val <= 0 ? NaN : Math.log(val);
+      return val;
+    }
+    function parseAtom(src, i) {
+      if (i >= src.length) return { v: 0, g: false, i: i };
+      if (isFnTok(src[i])) {
+        const arg = parseAtom(src, i + 1);
+        return { v: evalFn(src[i], arg.v), g: true, i: arg.i };
+      }
+      if (src[i] === '(') {
+        let depth = 1, j = i + 1;
+        while (j < src.length && depth) {
+          if (src[j] === '(') depth++;
+          else if (src[j] === ')') depth--;
+          j++;
+        }
+        return { v: evalExpr(src.slice(i + 1, j - 1)), g: true, i: j };
+      }
+      if (src[i] === 'τ') return { v: TAU, g: true, i: i + 1 };
+      if (src[i] === '-τ') return { v: -TAU, g: true, i: i + 1 };
+      if (src[i] === 'π') return { v: Math.PI, g: true, i: i + 1 };
+      if (src[i] === '-π') return { v: -Math.PI, g: true, i: i + 1 };
+      if (src[i] === 'e') return { v: Math.E, g: true, i: i + 1 };
+      if (src[i] === '-e') return { v: -Math.E, g: true, i: i + 1 };
+      return { v: parseBase12(src[i]), g: false, i: i + 1 };
     }
     function evalExpr(src) {
       const list = [];
-      for (let i = 0; i < src.length; i++) {
-        if (src[i] === '(') {
-          let depth = 1, j = i + 1;
-          while (j < src.length && depth) {
-            if (src[j] === '(') depth++;
-            else if (src[j] === ')') depth--;
-            j++;
-          }
-          list.push({ v: evalExpr(src.slice(i + 1, j - 1)), g: true });
-          i = j - 1;
-        } else if (src[i] === 'τ') list.push({ v: TAU, g: true });
-        else if (src[i] === '-τ') list.push({ v: -TAU, g: true });
-        else if (src[i] === 'π') list.push({ v: Math.PI, g: true });
-        else if (src[i] === '-π') list.push({ v: -Math.PI, g: true });
-        else if (isOpTok(src[i])) list.push(src[i]);
-        else list.push({ v: parseBase12(src[i]), g: false });
+      let i = 0;
+      while (i < src.length) {
+        if (isOpTok(src[i])) { list.push(src[i]); i++; }
+        else {
+          const atom = parseAtom(src, i);
+          list.push({ v: atom.v, g: atom.g });
+          i = atom.i;
+        }
       }
       const prec = { '^': 3, '×': 2, '÷': 2, '%': 2, '+': 1, '−': 1 };
       const right = { '^': true };
@@ -621,7 +646,7 @@
       if (isConstTok(lastTok()) && (fresh || current === '0' || current === '-0')) {
         tokens.push('^');
         operator = '^';
-        previous = lastTok() === 'π' ? Math.PI : TAU;
+        previous = constValue(lastTok());
       }
       if (d === '.') {
         if (fresh) { current = '0.'; fresh = false; }
@@ -753,6 +778,40 @@
     }
     function insertTau() { insertConst('τ'); }
     function insertPi() { insertConst('π'); }
+    function insertE() { insertConst('e'); }
+    function insertFn(fn) {
+      const hasNum = current && current !== 'Error' && current !== '' && current !== '0' && current !== '-0';
+      if (!fresh && hasNum) {
+        const out = evalFn(fn, parseBase12(current));
+        current = isFinite(out) ? formatResult(out) : 'Error';
+        groupedCurrent = true;
+        justEvaluated = false;
+        expression = renderTokens();
+        document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+        updateDisplay();
+        return;
+      }
+      if (justEvaluated && tokens.length === 0 && current && current !== 'Error') {
+        const out = evalFn(fn, parseBase12(current));
+        current = isFinite(out) ? formatResult(out) : 'Error';
+        fresh = true;
+        expression = '<span class="op">' + fnLabel(fn) + '</span>';
+        document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+        updateDisplay();
+        return;
+      }
+      justEvaluated = false;
+      flushNumber();
+      implicitMul();
+      tokens.push(fn);
+      current = '0';
+      fresh = true;
+      rightShown = false;
+      operator = null;
+      expression = renderTokens();
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+      updateDisplay();
+    }
     function applyPercent() {
       undoEntry = { current, previous, operator, expression, fresh };
       const val = parseBase12(current);
@@ -776,7 +835,7 @@
       updateDisplay();
     }
     function setOperator(op) {
-      if (op === 'sqrt') { applyUnary('sqrt'); return; }
+      if (op === 'sqrt') { insertFn('√'); return; }
       if (op === 'tau') { insertTau(); return; }
       justEvaluated = false;
       const leftVal = parseBase12(current);
@@ -911,7 +970,7 @@
         rightShown = true;
         justEvaluated = false;
         operator = '^';
-        previous = lastTok() === '^' ? (tokens[tokens.length - 2] === 'π' ? Math.PI : TAU) : previous;
+        previous = lastTok() === '^' ? constValue(tokens[tokens.length - 2]) : previous;
       } else if (operator) {
         rightShown = true;
         justEvaluated = false;
@@ -945,15 +1004,15 @@
         else if (btn.dataset.action === 'backspace') backspace();
         else if (btn.dataset.action === 'sign') toggleSign();
         else if (btn.dataset.action === 'dot') inputDigit('.');
-        else if (btn.dataset.action === 'inv') applyUnary('inv');
-        else if (btn.dataset.action === 'sin') applyUnary('sin');
-        else if (btn.dataset.action === 'cos') applyUnary('cos');
-        else if (btn.dataset.action === 'tan') applyUnary('tan');
-        else if (btn.dataset.action === 'log12') applyUnary('log12');
-        else if (btn.dataset.action === 'asin') applyUnary('asin');
-        else if (btn.dataset.action === 'acos') applyUnary('acos');
-        else if (btn.dataset.action === 'exp') applyUnary('exp');
-        else if (btn.dataset.action === 'ln') applyUnary('ln');
+        else if (btn.dataset.action === 'inv') insertFn('inv');
+        else if (btn.dataset.action === 'sin') insertFn('sin');
+        else if (btn.dataset.action === 'cos') insertFn('cos');
+        else if (btn.dataset.action === 'tan') insertFn('tan');
+        else if (btn.dataset.action === 'log12') insertFn('log12');
+        else if (btn.dataset.action === 'asin') insertFn('asin');
+        else if (btn.dataset.action === 'acos') insertFn('acos');
+        else if (btn.dataset.action === 'exp') insertE();
+        else if (btn.dataset.action === 'ln') insertFn('ln');
         else if (btn.dataset.action === 'lparen') openParen();
         else if (btn.dataset.action === 'rparen') closeParen();
         else if (btn.dataset.action === 'mem') memoryAdd();
@@ -1063,12 +1122,12 @@
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
       updateDisplay();
     }, 500);
-    bindLongPress(document.getElementById('sciSin'), () => { if (advancedOps) applyUnary('asin'); }, 450);
-    bindLongPress(document.getElementById('sciCos'), () => { if (advancedOps) applyUnary('acos'); }, 450);
+    bindLongPress(document.getElementById('sciSin'), () => { if (advancedOps) insertFn('asin'); }, 450);
+    bindLongPress(document.getElementById('sciCos'), () => { if (advancedOps) insertFn('acos'); }, 450);
     bindLongPress(document.getElementById('op3'), () => {
-      if (advancedOps && document.getElementById('op3').dataset.op === '^') applyUnary('exp');
+      if (advancedOps && document.getElementById('op3').dataset.op === '^') insertE();
     }, 450);
-    bindLongPress(document.getElementById('sciLog'), () => { if (advancedOps) applyUnary('ln'); }, 450);
+    bindLongPress(document.getElementById('sciLog'), () => { if (advancedOps) insertFn('ln'); }, 450);
     bindLongPress(memBtn, () => { if (!advancedOps) memoryRecall(); }, 450);
     bindLongPress(document.getElementById('memClearBtn'), () => { if (advancedOps) memoryClear(); }, 450);
 
