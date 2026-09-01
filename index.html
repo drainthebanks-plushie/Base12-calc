@@ -534,6 +534,19 @@
       else if (tokens.length === 0) parts.push(toKaktovik(current));
       return parts.join(' ');
     }
+    function isErrorState() { return current === 'Error'; }
+    function clearErrorState() {
+      current = '0';
+      previous = null;
+      operator = null;
+      expression = '';
+      fresh = true;
+      tokens = [];
+      justEvaluated = false;
+      rightShown = false;
+      groupedCurrent = false;
+      document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+    }
     function flushNumber() {
       if (!fresh && current !== '' && current !== 'Error') {
         implicitMul();
@@ -674,6 +687,7 @@
       return st.length ? st[0].v : 0;
     }
     function inputDigit(d) {
+      if (isErrorState()) clearErrorState();
       groupedCurrent = false;
       if (justEvaluated && !operator && tokens.length === 0) {
         tokens = [];
@@ -772,6 +786,7 @@
     function toRad(v) { return angleDeg ? v * TAU / 12 : v; }
     function fromRad(v) { return angleDeg ? v * 12 / TAU : v; }
     function applyUnary(fn) {
+      if (isErrorState()) return;
       const val = parseBase12(current);
       const g = toKaktovik(current);
       const labels = {
@@ -799,6 +814,7 @@
       updateDisplay();
     }
     function insertConst(name) {
+      if (isErrorState()) return;
       const hasNum = current && current !== 'Error' && current !== '0' && current !== '-0' && current !== '';
       justEvaluated = false;
       if (tokens.length === 0 && hasNum) {
@@ -836,6 +852,7 @@
       updateDisplay();
     }
     function insertFn(fn) {
+      if (isErrorState()) return;
       const hasNum = current && current !== 'Error' && current !== '' && current !== '0' && current !== '-0';
       if (!fresh && hasNum) {
         applyFnToValue(fn, current);
@@ -876,6 +893,7 @@
       updateDisplay();
     }
     function applyPercent() {
+      if (isErrorState()) return;
       const val = parseBase12(current);
       const curGlyphs = toKaktovik(current);
       if (previous !== null && operator && operator !== '%') {
@@ -897,6 +915,7 @@
       updateDisplay();
     }
     function setOperator(op) {
+      if (isErrorState()) return;
       if (op === 'sqrt') { insertFn('√'); return; }
       if (op === 'tau') { insertTau(); return; }
       justEvaluated = false;
@@ -919,6 +938,7 @@
       updateDisplay();
     }
     function equals() {
+      if (isErrorState()) return;
       const rightStr = (current && current !== 'Error') ? current : '0';
       const rightVal = parseBase12(rightStr);
       const leftVal = previous;
@@ -957,6 +977,11 @@
       updateDisplay();
     }
     function backspace() {
+      if (isErrorState()) {
+        clearErrorState();
+        updateDisplay();
+        return;
+      }
       if (!fresh && current.length) {
         if (current.length <= 1 || (current.length === 2 && current.startsWith('-'))) {
           current = '0'; fresh = true;
@@ -977,7 +1002,7 @@
       }
     }
     function toggleSign() {
-      if (current === 'Error') return;
+      if (isErrorState()) return;
       if (isConstTok(lastTok()) && (fresh || current === '0' || current === '-0')) {
         const t = lastTok();
         tokens[tokens.length - 1] = t.charAt(0) === '-' ? t.slice(1) : '-' + t;
@@ -1001,6 +1026,7 @@
       updateDisplay();
     }
     function openParen() {
+      if (isErrorState()) return;
       if (justEvaluated) {
         tokens = [];
         current = '0';
@@ -1017,6 +1043,7 @@
       updateDisplay();
     }
     function closeParen() {
+      if (isErrorState()) return;
       flushNumber();
       if (parenDepthOf(tokens) <= 0) {
         expression = renderTokens();
@@ -1042,10 +1069,12 @@
       updateDisplay();
     }
     function memoryAdd() {
+      if (isErrorState()) return;
       memory += parseBase12(current);
       updateDisplay();
     }
     function memoryRecall() {
+      if (isErrorState()) return;
       const memStr = formatResult(memory);
       const midExpr = tokens.length > 0 && (isOpTok(lastTok()) || lastTok() === '(' || isFnTok(lastTok()) || isConstTok(lastTok()));
       const afterValue = tokens.length > 0 && isAtomEnd(lastTok()) && !justEvaluated;
@@ -1089,6 +1118,7 @@
       updateDisplay();
     }
     function memorySub() {
+      if (isErrorState()) return;
       memory -= parseBase12(current);
       updateDisplay();
     }
