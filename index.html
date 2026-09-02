@@ -1061,12 +1061,6 @@
       if (start >= 0) {
         const inner = evalExpr(tokens.slice(start + 1, tokens.length - 1));
         if (!isFinite(inner)) current = 'Error';
-        else if (parenDepthOf(tokens) === 0) {
-          const whole = evalExpr(tokens);
-          current = isFinite(whole) ? formatResult(whole) : 'Error';
-        } else {
-          current = formatResult(inner);
-        }
       }
       fresh = true;
       rightShown = false;
