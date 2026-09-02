@@ -76,18 +76,35 @@
       display: flex; flex-direction: column; justify-content: flex-end;
       box-shadow: inset 0 3px 8px rgba(0,0,0,.55), 0 0 0 2px #8a7348;
       cursor: pointer; user-select: none; -webkit-user-select: none;
+      overflow: hidden;
+    }
+    .tape, .expression {
+      overflow-x: auto;
+      overflow-y: hidden;
+      white-space: nowrap;
+      text-align: right;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
+      touch-action: pan-x;
+      scrollbar-width: none;
+    }
+    .tape::-webkit-scrollbar, .expression::-webkit-scrollbar { display: none; }
+    .tape-inner, .expression-inner {
+      display: inline-block;
+      min-width: 100%;
+      text-align: right;
+      white-space: nowrap;
     }
     .tape {
-      min-height: 22px; max-height: 26px; overflow: hidden;
-      font-size: 13px; color: #9a8b72; text-align: right; line-height: 1.55;
-      font-family: 'Kaktovik', ui-monospace, monospace; white-space: nowrap;
+      min-height: 22px; max-height: 26px;
+      font-size: 13px; color: #9a8b72; line-height: 1.55;
+      font-family: 'Kaktovik', ui-monospace, monospace;
       padding-top: 4px;
     }
-    .tape div { overflow: hidden; text-overflow: ellipsis; }
     .expression {
-      font-size: 14px; color: var(--muted); text-align: right; min-height: 24px;
+      font-size: 14px; color: var(--muted); min-height: 24px;
       font-family: 'Kaktovik', monospace; margin: 4px 0 4px; line-height: 1.55;
-      padding-top: 3px; overflow: visible; white-space: nowrap;
+      padding-top: 3px;
     }
     .expression .op { font-family: Palatino, "Times New Roman", serif; color: #d4b36a; margin: 0 3px; }
     .main-display {
@@ -268,8 +285,8 @@
     <div class="brand">Base-12 · Kaktovik</div>
     <div class="display" id="displayBox">
       <div class="mem-flag" id="memFlag">M</div>
-      <div class="tape" id="tape"></div>
-      <div class="expression" id="expression"></div>
+      <div class="tape" id="tape"><div class="tape-inner" id="tapeInner"></div></div>
+      <div class="expression" id="expression"><div class="expression-inner" id="expressionInner"></div></div>
       <div class="main-display" id="display">𝋀</div>
       <div class="readouts">
         <div class="angle-flag" id="angleFlag">RAD</div>
@@ -352,9 +369,11 @@
 
     const displayEl = document.getElementById('display');
     const expressionEl = document.getElementById('expression');
+    const expressionInnerEl = document.getElementById('expressionInner');
     const decimalEl = document.getElementById('decimal');
     const ascii12El = document.getElementById('ascii12');
     const tapeEl = document.getElementById('tape');
+    const tapeInnerEl = document.getElementById('tapeInner');
     const memBtn = document.getElementById('memBtn');
     const opButtons = [
       document.getElementById('op1'),
@@ -484,11 +503,16 @@
       if (op === '%') return 'mod';
       return op;
     }
+    function scrollLineEnd(scroller) {
+      if (!scroller) return;
+      requestAnimationFrame(() => { scroller.scrollLeft = scroller.scrollWidth; });
+    }
     function pushTape(html) {
       if (!html) return;
       tapeLines.push(html);
       if (tapeLines.length > 6) tapeLines.shift();
-      tapeEl.innerHTML = '<div>' + tapeLines[tapeLines.length - 1] + '</div>';
+      tapeInnerEl.innerHTML = tapeLines[tapeLines.length - 1];
+      scrollLineEnd(tapeEl);
     }
     function updateDisplay() {
       const text = toKaktovik(current);
@@ -502,7 +526,8 @@
       displayEl.style.fontSize = size + 'px';
       ascii12El.innerHTML = current + '<sub>12</sub>';
       decimalEl.innerHTML = '= ' + formatDecimal(parseBase12(current)) + '<sub>10</sub>';
-      expressionEl.innerHTML = expression || renderTokens();
+      expressionInnerEl.innerHTML = expression || renderTokens();
+      scrollLineEnd(expressionEl);
       const ang = document.getElementById('angleFlag');
       if (ang) ang.textContent = angleDeg ? '12T' : 'RAD';
       document.querySelector('.calculator').classList.toggle('arabic', phonePad);
@@ -1188,31 +1213,34 @@
 
     (function () {
       const box = document.getElementById('displayBox');
-      let startY = null, startT = 0, holdTimer = null, switched = false;
+      let startY = null, startX = null, startT = 0, holdTimer = null, switched = false, horiz = false;
       function clearHold() { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } }
-      function begin(y) {
-        startY = y; startT = Date.now(); switched = false;
+      function begin(x, y) {
+        startX = x; startY = y; startT = Date.now(); switched = false; horiz = false;
         clearHold();
         holdTimer = setTimeout(() => { holdTimer = null; switched = true; togglePadLayout(); }, 1200);
       }
-      function move(y) {
+      function move(x, y) {
         if (startY === null) return;
-        if (Math.abs(startY - y) > 14) clearHold();
+        const dx = Math.abs(x - startX), dy = Math.abs(y - startY);
+        if (dx > 14 || dy > 14) clearHold();
+        if (dx > 16 && dx > dy) horiz = true;
       }
       function end(y) {
         const dy = startY === null ? 0 : startY - y;
         const dt = Date.now() - startT;
+        const wasHoriz = horiz;
         clearHold();
-        startY = null;
-        if (switched) return;
+        startY = null; startX = null; horiz = false;
+        if (switched || wasHoriz) return;
         if (dy > 40 && dt < 600) document.querySelector('.calculator').classList.toggle('flip');
       }
-      box.addEventListener('touchstart', e => { if (e.touches.length === 1) begin(e.touches[0].clientY); }, { passive: true });
-      box.addEventListener('touchmove', e => { if (e.touches.length) move(e.touches[0].clientY); }, { passive: true });
+      box.addEventListener('touchstart', e => { if (e.touches.length === 1) begin(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+      box.addEventListener('touchmove', e => { if (e.touches.length) move(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
       box.addEventListener('touchend', e => end(e.changedTouches[0] ? e.changedTouches[0].clientY : startY), { passive: true });
       box.addEventListener('touchcancel', clearHold, { passive: true });
-      box.addEventListener('mousedown', e => begin(e.clientY));
-      box.addEventListener('mousemove', e => { if (e.buttons) move(e.clientY); });
+      box.addEventListener('mousedown', e => begin(e.clientX, e.clientY));
+      box.addEventListener('mousemove', e => { if (e.buttons) move(e.clientX, e.clientY); });
       box.addEventListener('mouseup', e => end(e.clientY));
       box.addEventListener('mouseleave', clearHold);
     })();
