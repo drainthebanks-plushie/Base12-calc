@@ -13,11 +13,19 @@
   <style>
     @font-face {
       font-family: 'Kaktovik';
-      src: url(data:font/truetype;charset=utf-8;base64,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) format('truetype');
+      src: url(data:font/truetype;charset=utf-8;base64,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) format('truetype');
       font-weight: normal;
       font-style: normal;
       font-display: block;
     }
+    @font-face {
+      font-family: 'KaktovikKeys';
+      src: url(data:font/truetype;charset=utf-8;base64,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) format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: block;
+    }
+    
     :root {
       --paper: #e8dcc4;
       --paper-dark: #d4c4a8;
@@ -106,10 +114,17 @@
       font-family: 'Kaktovik', monospace; margin: 4px 0 4px; line-height: 1.55;
       padding-top: 3px;
     }
-    .expression .op { font-family: Palatino, "Times New Roman", serif; color: #d4b36a; margin: 0 3px; }
+    .expression .op, .tape .op {
+      font-family: Palatino, "Times New Roman", serif;
+      color: #d4b36a;
+      margin: 0 3px;
+      display: inline-block;
+      transform: translateY(0.45em);
+      position: relative;
+    }
     .main-display {
-      font-size: 40px; font-weight: 500; text-align: right;
-      font-family: 'Kaktovik', monospace; line-height: 1.4; letter-spacing: .04em;
+      font-size: 36px; font-weight: 500; text-align: right;
+      font-family: 'Kaktovik', monospace; line-height: 1.45; letter-spacing: .04em;
       color: #f3ead6; white-space: nowrap; overflow: hidden; padding-top: 6px;
     }
     .readouts { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 4px; }
@@ -212,10 +227,19 @@
     button:active { transform: translateY(2px); box-shadow: 0 1px 0 #c4ae86; }
     button.digit {
       background-color: #f6edd8;
-      font-family: 'Kaktovik', monospace; font-size: 24px; font-weight: 400;
+      font-family: 'KaktovikKeys', monospace;
+      font-size: 26px; font-weight: 400;
       color: #5c4a32;
       -webkit-text-stroke: 0.45px #f6edd8;
       text-shadow: 0.6px 0.6px 0 #8a7350;
+      line-height: 1;
+    }
+    button.digit .k-digit {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      transform: none;
     }
     .calculator.arabic button.digit {
       color: #5c4a32;
@@ -240,8 +264,9 @@
     }
     button.fn { position: relative; }
     button.equals {
-      background-color: var(--terra);
-      color: #f3ead6; font-weight: 800; font-size: 16px;
+      background-color: var(--mustard);
+      color: #2a2218; font-weight: 800; font-size: 18px;
+      font-family: Palatino, "Times New Roman", serif;
     }
     .c-mustard, .side-op[data-op="+"],
     .calculator.adv #op4, .calculator:not(.adv) #op1, #sciTan {
@@ -257,7 +282,7 @@
     }
     .c-terra, .side-op[data-op="×"],
     .calculator.adv #op2, .calculator:not(.adv) #op3,
-    #sciSin, button.equals {
+    #sciSin {
       background-color: var(--terra) !important; color: #f3ead6 !important;
       border: 1px solid #c4ae86 !important;
       box-shadow: 0 3px 0 #c4ae86, 0 5px 8px rgba(80,60,30,.14) !important;
@@ -310,33 +335,33 @@
 
       <div class="numpad" id="numpad">
         <div class="num-row">
-          <button class="digit" data-bars="7" data-phone="7" data-digit="7">𝋋</button>
-          <button class="digit" data-bars="8" data-phone="8" data-digit="8">𝋌</button>
-          <button class="digit" data-bars="9" data-phone="9" data-digit="9">𝋏</button>
+          <button class="digit" data-bars="7" data-phone="7" data-digit="7"><span class="k-digit">𝋋</span></button>
+          <button class="digit" data-bars="8" data-phone="8" data-digit="8"><span class="k-digit">𝋌</span></button>
+          <button class="digit" data-bars="9" data-phone="9" data-digit="9"><span class="k-digit">𝋏</span></button>
           <button class="op side-op" data-op="+">+</button>
           <button class="op" id="op1" data-op="+">+</button>
           <button class="op dual sci-op" id="sciSin" data-action="sin"><span class="k-main">sin</span><span class="k-sub">asin</span></button>
         </div>
         <div class="num-row">
-          <button class="digit" data-bars="4" data-phone="4" data-digit="4">𝋆</button>
-          <button class="digit" data-bars="5" data-phone="5" data-digit="5">𝋇</button>
-          <button class="digit" data-bars="6" data-phone="6" data-digit="6">𝋊</button>
+          <button class="digit" data-bars="4" data-phone="4" data-digit="4"><span class="k-digit">𝋆</span></button>
+          <button class="digit" data-bars="5" data-phone="5" data-digit="5"><span class="k-digit">𝋇</span></button>
+          <button class="digit" data-bars="6" data-phone="6" data-digit="6"><span class="k-digit">𝋊</span></button>
           <button class="op side-op" data-op="−">−</button>
           <button class="op" id="op2" data-op="−">−</button>
           <button class="op dual sci-op" id="sciCos" data-action="cos"><span class="k-main">cos</span><span class="k-sub">acos</span></button>
         </div>
         <div class="num-row">
-          <button class="digit" data-bars="1" data-phone="1" data-digit="1">𝋁</button>
-          <button class="digit" data-bars="2" data-phone="2" data-digit="2">𝋂</button>
-          <button class="digit" data-bars="3" data-phone="3" data-digit="3">𝋅</button>
+          <button class="digit" data-bars="1" data-phone="1" data-digit="1"><span class="k-digit">𝋁</span></button>
+          <button class="digit" data-bars="2" data-phone="2" data-digit="2"><span class="k-digit">𝋂</span></button>
+          <button class="digit" data-bars="3" data-phone="3" data-digit="3"><span class="k-digit">𝋅</span></button>
           <button class="op side-op" data-op="×">×</button>
           <button class="op" id="op3" data-op="×">×</button>
           <button class="op sci-op" id="sciTan" data-action="tan">tan</button>
         </div>
         <div class="num-row">
-          <button class="digit" data-bars="A" data-phone="A" data-digit="A">𝋐</button>
-          <button class="digit" data-bars="0" data-phone="0" data-digit="0">𝋀</button>
-          <button class="digit" data-bars="B" data-phone="B" data-digit="B">𝋑</button>
+          <button class="digit" data-bars="A" data-phone="A" data-digit="A"><span class="k-digit">𝋐</span></button>
+          <button class="digit" data-bars="0" data-phone="0" data-digit="0"><span class="k-digit">𝋀</span></button>
+          <button class="digit" data-bars="B" data-phone="B" data-digit="B"><span class="k-digit">𝋑</span></button>
           <button class="op side-op" data-op="÷">÷</button>
           <button class="op" id="op4" data-op="÷">÷</button>
           <button class="op dual sci-op" id="sciLog" data-action="log12"><span class="k-main">log₁₂</span><span class="k-sub">ln</span></button>
@@ -525,7 +550,7 @@
       if (len > 15) size = 20;
       displayEl.style.fontSize = size + 'px';
       ascii12El.innerHTML = current + '<sub>12</sub>';
-      decimalEl.innerHTML = '= ' + formatDecimal(parseBase12(current)) + '<sub>10</sub>';
+      decimalEl.innerHTML = '<span class="op">=</span> ' + formatDecimal(parseBase12(current)) + '<sub>10</sub>';
       expressionInnerEl.innerHTML = expression || renderTokens();
       scrollLineEnd(expressionEl);
       const ang = document.getElementById('angleFlag');
@@ -546,6 +571,7 @@
       if (isFnTok(tok) || '+−×÷^%()'.indexOf(tok) !== -1 || tok === 'τ' || tok === 'π' || tok === 'e' || tok === '-τ' || tok === '-π' || tok === '-e' || tok === '√') {
         if (tok === '%') return '<span class="op">mod</span>';
         if ('+−×÷^'.indexOf(tok) !== -1) return '<span class="op">' + tok + '</span>';
+        if (tok === '(' || tok === ')') return '<span class="op">' + tok + '</span>';
         if (tok === '-π' || tok === '-τ' || tok === '-e') return '<span class="op">−' + tok.slice(1) + '</span>';
         if (isFnTok(tok) || tok === 'τ' || tok === 'π' || tok === 'e' || tok === '√') return '<span class="op">' + fnLabel(tok) + '</span>';
         return tok;
@@ -748,14 +774,15 @@
         const val = phonePad ? btn.dataset.phone : btn.dataset.bars;
         btn.dataset.digit = val;
         if (phonePad) {
-          btn.textContent = val;
+          btn.innerHTML = '<span class="k-digit">' + val + '</span>';
           btn.style.fontFamily = '-apple-system, BlinkMacSystemFont, sans-serif';
           btn.style.fontSize = '22px';
           btn.style.webkitTextStroke = '0';
           btn.style.fontWeight = '600';
         } else {
           const i = DIGIT_CHARS.indexOf(val);
-          btn.textContent = i >= 0 ? KAK[i] : val;
+          const g = i >= 0 ? KAK[i] : val;
+          btn.innerHTML = '<span class="k-digit">' + g + '</span>';
           btn.style.fontFamily = '';
           btn.style.fontSize = '';
           btn.style.webkitTextStroke = '';
@@ -832,7 +859,7 @@
       else if (fn === 'log12') out = val <= 0 ? NaN : Math.log(val) / Math.log(12);
       else if (fn === 'ln') out = val <= 0 ? NaN : Math.log(val);
       current = isFinite(out) ? formatResult(out) : 'Error';
-      expression = '<span class="op">' + label + '</span> ' + g + ' =';
+      expression = '<span class="op">' + label + '</span> ' + g + ' <span class="op">=</span>';
       pushTape(expression + ' ' + toKaktovik(current));
       previous = null; operator = null; tokens = []; fresh = true; justEvaluated = true;
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
@@ -928,10 +955,10 @@
           const pct = base * val / HUNDRED12;
           result = operator === '+' ? base + pct : base - pct;
         } else result = compute(base, operator, val / HUNDRED12);
-        expression = toKaktovik(toBase12(base)) + ' <span class="op">' + opSymbol(operator) + '</span> ' + curGlyphs + '<span class="op">%</span> =';
+        expression = toKaktovik(toBase12(base)) + ' <span class="op">' + opSymbol(operator) + '</span> ' + curGlyphs + '<span class="op">%</span> <span class="op">=</span>';
         current = formatResult(result);
       } else {
-        expression = curGlyphs + '<span class="op">%</span> =';
+        expression = curGlyphs + '<span class="op">%</span> <span class="op">=</span>';
         current = formatResult(val / HUNDRED12);
       }
       previous = null; operator = null; fresh = true;
@@ -972,7 +999,7 @@
       if (isOpTok(lastTok()) && rightShown) tokens.push(rightStr);
       if (tokens.length && parenDepthOf(tokens) !== 0) {
         current = 'Error';
-        expression = tokens.map(tokenGlyph).join(' ') + ' =';
+        expression = tokens.map(tokenGlyph).join(' ') + ' <span class="op">=</span>';
         pushTape(expression + ' Error');
         tokens = [];
         previous = null; operator = null; fresh = true; justEvaluated = true; rightShown = false;
@@ -987,13 +1014,13 @@
       if (!isFinite(result)) current = 'Error';
       else current = formatResult(result);
       if (tokens.length) {
-        expression = tokens.map(tokenGlyph).join(' ') + ' =';
+        expression = tokens.map(tokenGlyph).join(' ') + ' <span class="op">=</span>';
       } else if (op && leftVal !== null) {
         expression = toKaktovik(toBase12(leftVal)) +
           ' <span class="op">' + opSymbol(op) + '</span> ' +
-          toKaktovik(rightStr) + ' =';
+          toKaktovik(rightStr) + ' <span class="op">=</span>';
       } else {
-        expression = toKaktovik(rightStr) + ' =';
+        expression = toKaktovik(rightStr) + ' <span class="op">=</span>';
       }
       pushTape(expression + ' ' + toKaktovik(current));
       tokens = [];
