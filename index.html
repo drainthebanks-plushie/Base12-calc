@@ -127,6 +127,16 @@
       font-family: 'Kaktovik', monospace; line-height: 1.45; letter-spacing: .04em;
       color: #f3ead6; white-space: nowrap; overflow: hidden; padding-top: 6px;
     }
+    .sci-e {
+      font-family: Palatino, "Times New Roman", serif;
+      font-weight: 600;
+      font-size: 0.78em;
+      display: inline-block;
+      transform: translateY(0.48em);
+      letter-spacing: 0;
+      margin: 0 1px;
+    }
+    .calculator.arabic .sci-e { transform: none; font-size: 0.9em; }
     .readouts { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 4px; }
     .mem-flag {
       position: absolute; top: 8px; left: 12px; z-index: 2;
@@ -413,6 +423,11 @@
       if (str === 'Error') return 'Error';
       return String(str).replace(/[0-9A-B]/g, ch => KAK[DIGIT_CHARS.indexOf(ch)] || ch);
     }
+    function toKaktovikHtml(str) {
+      const s = toKaktovik(str);
+      if (s === 'Error') return s;
+      return s.replace(/e-?/g, m => '<span class="sci-e">' + m + '</span>');
+    }
     function parseBase12(str) {
       if (!str || str === '-' || str === 'Error') return 0;
       const neg = str.startsWith('-');
@@ -543,7 +558,11 @@
     }
     function updateDisplay() {
       const text = toKaktovik(current);
-      displayEl.textContent = text;
+      if (/e[+\-]?[0-9A-B]+$/i.test(current)) {
+        displayEl.innerHTML = toKaktovikHtml(current);
+      } else {
+        displayEl.textContent = text;
+      }
       const len = text.length;
       let size = 40;
       if (len > 8) size = 32;
