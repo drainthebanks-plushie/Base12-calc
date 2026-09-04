@@ -429,32 +429,35 @@
       return s.replace(/e-?/g, m => '<span class="sci-e">' + m + '</span>');
     }
     function parseBase12(str) {
-      if (!str || str === '-' || str === 'Error') return 0;
+      if (!str || str === '-' || str === 'Error') return NaN;
+      str = String(str).toUpperCase();
       const neg = str.startsWith('-');
       if (neg) str = str.slice(1);
-      const eIdx = str.toLowerCase().indexOf('e');
+      if (!str) return NaN;
+
+      const parts = str.split('E');
+      if (parts.length > 2) return NaN;
+      str = parts[0];
       let exp12 = 0;
-      if (eIdx >= 0) {
-        const expStr = str.slice(eIdx + 1);
-        str = str.slice(0, eIdx);
-        let e = 0, esign = 1, es = expStr;
+      if (parts.length === 2) {
+        let es = parts[1];
+        let esign = 1;
         if (es.startsWith('-')) { esign = -1; es = es.slice(1); }
-        for (const ch of es) {
-          const d = DIGIT_CHARS.indexOf(ch);
-          if (d >= 0) e = e * 12 + d;
-        }
+        else if (es.startsWith('+')) { es = es.slice(1); }
+        if (!es || !/^[0-9AB]+$/.test(es)) return NaN;
+        let e = 0;
+        for (const ch of es) e = e * 12 + DIGIT_CHARS.indexOf(ch);
         exp12 = esign * e;
       }
+
+      if (!/^(?:[0-9AB]+(?:\.[0-9AB]*)?|\.[0-9AB]+)$/.test(str)) return NaN;
       const [intPart = '0', fracPart = ''] = str.split('.');
       let val = 0;
-      for (const ch of intPart) {
-        const d = DIGIT_CHARS.indexOf(ch);
-        if (d >= 0) val = val * 12 + d;
-      }
+      for (const ch of intPart || '0') val = val * 12 + DIGIT_CHARS.indexOf(ch);
       let place = 1 / 12;
       for (const ch of fracPart) {
-        const d = DIGIT_CHARS.indexOf(ch);
-        if (d >= 0) { val += d * place; place /= 12; }
+        val += DIGIT_CHARS.indexOf(ch) * place;
+        place /= 12;
       }
       if (exp12) val *= Math.pow(12, exp12);
       return neg ? -val : val;
@@ -913,14 +916,46 @@
     function insertE() { insertConst('e'); }
     function applyFnToValue(fn, srcStr) {
       const srcGlyphs = toKaktovik(srcStr);
-      const out = evalFn(fn, parseBase12(srcStr));
+      const parsed = parseBase12(srcStr);
+      const out = evalFn(fn, parsed);
       current = isFinite(out) ? formatResult(out) : 'Error';
-      groupedCurrent = true;
-      fresh = true;
-      justEvaluated = tokens.length === 0;
-      const step = '<span class="op">' + fnLabel(fn) + '</span> ' + srcGlyphs + ' = ' + toKaktovik(current);
-      expression = step;
-      pushTape(step);
+      if (current === 'Error') {
+        groupedCurrent = false;
+        fresh = true;
+        justEvaluated = tokens.length === 0;
+        expression = '<span class="op">' + fnLabel(fn) + '</span> ' + srcGlyphs + ' = Error';
+        pushTape(expression);
+        document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
+        updateDisplay();
+        return;
+      }
+
+      // If the value was being entered as part of an expression, represent the
+      // unary operation in the token stream so '=' can evaluate the full expression.
+      if (tokens.length > 0) {
+        if (!fresh) {
+          implicitMul();
+          tokens.push(fn, srcStr);
+        } else if (isOpTok(lastTok()) || lastTok() === '(' || isFnTok(lastTok())) {
+          tokens.push(fn, srcStr);
+        } else {
+          implicitMul();
+          tokens.push(fn, srcStr);
+        }
+        groupedCurrent = true;
+        fresh = true;
+        rightShown = false;
+        justEvaluated = false;
+        expression = renderTokens();
+      } else {
+        groupedCurrent = true;
+        fresh = true;
+        justEvaluated = true;
+        expression = '<span class="op">' + fnLabel(fn) + '</span> ' + srcGlyphs + ' <span class="op">=</span>';
+        pushTape(expression + ' ' + toKaktovik(current));
+      }
+      operator = null;
+      previous = null;
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
       updateDisplay();
     }
@@ -1017,7 +1052,14 @@
       const leftVal = previous;
       const op = operator;
       flushNumber();
-      if (isOpTok(lastTok()) && rightShown) tokens.push(rightStr);
+      if (isOpTok(lastTok())) {
+        if (rightShown) tokens.push(rightStr);
+        else if (tokens.length >= 2) {
+          // Calculator-style behavior: 2 + = becomes 2 + 2 =.
+          const repeat = tokens[tokens.length - 2];
+          if (!isOpTok(repeat) && repeat !== '(' && !isFnTok(repeat)) tokens.push(repeat);
+        }
+      }
       if (tokens.length && parenDepthOf(tokens) !== 0) {
         current = 'Error';
         expression = tokens.map(tokenGlyph).join(' ') + ' <span class="op">=</span>';
@@ -1064,10 +1106,15 @@
       }
       if (tokens.length) {
         const t = tokens.pop();
-        if (!isOpTok(t) && t !== '(' && t !== ')' && t !== 'τ') {
-          current = t; fresh = false;
+        const numeric = typeof t === 'string' && isFinite(parseBase12(t));
+        if (numeric) {
+          current = t;
+          fresh = false;
+          rightShown = true;
         } else {
-          current = '0'; fresh = true;
+          current = '0';
+          fresh = true;
+          rightShown = false;
         }
         expression = renderTokens();
         document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
@@ -1133,7 +1180,7 @@
       const start = findGroupStart(tokens);
       if (start >= 0) {
         const inner = evalExpr(tokens.slice(start + 1, tokens.length - 1));
-        if (!isFinite(inner)) current = 'Error';
+        current = isFinite(inner) ? formatResult(inner) : 'Error';
       }
       fresh = true;
       rightShown = false;
@@ -1243,7 +1290,7 @@
       else if (key === ')') closeParen();
       else if (key === 'Enter' || key === '=') equals();
       else if (key === 'Escape' || key === 'c' || key === 'C') {
-        current = '0'; previous = null; operator = null; expression = ''; fresh = true; tokens = []; justEvaluated = false;
+        current = '0'; previous = null; operator = null; expression = ''; fresh = true; tokens = []; justEvaluated = false; rightShown = false; groupedCurrent = false;
         document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
         updateDisplay();
       }
@@ -1324,10 +1371,14 @@
       if (advancedOps && document.getElementById('op1').dataset.op === '%') applyPercent();
     }, 450);
     bindLongPress(document.querySelector('[data-action=backspace]'), () => {
-      current = '0'; previous = null; operator = null; expression = ''; fresh = true; tokens = []; justEvaluated = false;
+      current = '0'; previous = null; operator = null; expression = ''; fresh = true; tokens = []; justEvaluated = false; rightShown = false; groupedCurrent = false;
       if (tapeLines.length > 1) {
         tapeLines.splice(0, tapeLines.length - 1);
-        tapeEl.innerHTML = '<div>' + tapeLines[0] + '</div>';
+        tapeInnerEl.innerHTML = tapeLines[0] || '';
+      } else if (tapeLines.length === 1) {
+        tapeInnerEl.innerHTML = tapeLines[0];
+      } else {
+        tapeInnerEl.innerHTML = '';
       }
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
       updateDisplay();
