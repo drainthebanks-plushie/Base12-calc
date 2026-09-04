@@ -399,6 +399,7 @@
     let groupedCurrent = false, powerBaseGrouped = false;
     let tokens = [];
     let justEvaluated = false;
+    let lastEqualsOp = null, lastEqualsRight = null;
     let phonePad = false;
     let rightShown = false;
     let angleDeg = false;
@@ -769,6 +770,8 @@
         expression = '';
         current = '0';
         justEvaluated = false;
+        lastEqualsOp = null;
+        lastEqualsRight = null;
         fresh = true;
       }
       justEvaluated = false;
@@ -1047,6 +1050,23 @@
     }
     function equals() {
       if (isErrorState()) return;
+
+      // Repeated equals: after e.g. 4 + 3 =, each additional = adds 3 again.
+      if (justEvaluated && tokens.length === 0 && !operator && lastEqualsOp && lastEqualsRight !== null) {
+        const leftStr = current;
+        const left = parseBase12(leftStr);
+        const result = compute(left, lastEqualsOp, lastEqualsRight);
+        expression = toKaktovik(leftStr) +
+          ' <span class="op">' + opSymbol(lastEqualsOp) + '</span> ' +
+          toKaktovik(toBase12(lastEqualsRight)) + ' <span class="op">=</span>';
+        current = isFinite(result) ? formatResult(result) : 'Error';
+        pushTape(expression + ' ' + (current === 'Error' ? 'Error' : toKaktovik(current)));
+        fresh = true;
+        rightShown = false;
+        updateDisplay();
+        return;
+      }
+
       const rightStr = (current && current !== 'Error') ? current : '0';
       const rightVal = parseBase12(rightStr);
       const leftVal = previous;
@@ -1086,6 +1106,13 @@
         expression = toKaktovik(rightStr) + ' <span class="op">=</span>';
       }
       pushTape(expression + ' ' + toKaktovik(current));
+      if (current !== 'Error' && op && leftVal !== null) {
+        lastEqualsOp = op;
+        lastEqualsRight = rightVal;
+      } else if (current === 'Error') {
+        lastEqualsOp = null;
+        lastEqualsRight = null;
+      }
       tokens = [];
       previous = null; operator = null; fresh = true; justEvaluated = true; rightShown = false;
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
