@@ -579,7 +579,7 @@
       expressionInnerEl.innerHTML = expression || renderTokens();
       scrollLineEnd(expressionEl);
       const ang = document.getElementById('angleFlag');
-      if (ang) ang.textContent = angleDeg ? '12T' : 'RAD';
+      if (ang) ang.textContent = angleDeg ? 'TURN₁₂' : 'RAD';
       document.querySelector('.calculator').classList.toggle('arabic', phonePad);
       memBtn.classList.toggle('has-mem', memory !== 0);
       const flag = document.getElementById('memFlag');
@@ -677,7 +677,7 @@
       if (fn === 'inv') return val === 0 ? NaN : 1 / val;
       if (fn === 'sin') return Math.sin(toRad(val));
       if (fn === 'cos') return Math.cos(toRad(val));
-      if (fn === 'tan') return Math.tan(toRad(val));
+      if (fn === 'tan') return safeTan(val);
       if (fn === 'asin') return (val < -1 || val > 1) ? NaN : fromRad(Math.asin(val));
       if (fn === 'acos') return (val < -1 || val > 1) ? NaN : fromRad(Math.acos(val));
       if (fn === 'exp') return Math.exp(val);
@@ -776,11 +776,7 @@
       }
       justEvaluated = false;
       rightShown = true;
-      if (isConstTok(lastTok()) && (fresh || current === '0' || current === '-0')) {
-        tokens.push('^');
-        operator = '^';
-        previous = constValue(lastTok());
-      } else if (fresh && isAtomEnd(lastTok())) {
+      if (fresh && isAtomEnd(lastTok())) {
         implicitMul();
       }
       if (d === '.') {
@@ -849,6 +845,11 @@
       }
       document.querySelectorAll('button.op').forEach(b => b.classList.remove('active'));
     }
+    function modulo(a, b) {
+      if (b === 0) return NaN;
+      const m = Math.abs(b);
+      return ((a % m) + m) % m;
+    }
     function compute(a, op, b) {
       switch (op) {
         case '+': return a + b;
@@ -858,12 +859,16 @@
         case '^':
           if (a < 0 && !powerBaseGrouped) return -Math.pow(Math.abs(a), b);
           return Math.pow(a, b);
-        case '%': return b === 0 ? NaN : a % b;
+        case '%': return modulo(a, b);
         default: return b;
       }
     }
     function toRad(v) { return angleDeg ? v * TAU / 12 : v; }
     function fromRad(v) { return angleDeg ? v * 12 / TAU : v; }
+    function safeTan(v) {
+      const r = toRad(v);
+      return Math.abs(Math.cos(r)) < 1e-12 ? NaN : Math.tan(r);
+    }
     function applyUnary(fn) {
       if (isErrorState()) return;
       const val = parseBase12(current);
@@ -879,7 +884,7 @@
       else if (fn === 'inv') out = val === 0 ? NaN : 1 / val;
       else if (fn === 'sin') out = Math.sin(toRad(val));
       else if (fn === 'cos') out = Math.cos(toRad(val));
-      else if (fn === 'tan') out = Math.tan(toRad(val));
+      else if (fn === 'tan') out = safeTan(val);
       else if (fn === 'asin') out = (val < -1 || val > 1) ? NaN : fromRad(Math.asin(val));
       else if (fn === 'acos') out = (val < -1 || val > 1) ? NaN : fromRad(Math.acos(val));
       else if (fn === 'exp') out = Math.exp(val);
@@ -1237,14 +1242,13 @@
         return;
       }
       if (isConstTok(lastTok()) && (fresh || current === '0' || current === '-0')) {
-        tokens.push('^');
+        implicitMul();
         tokens.push(memStr);
         current = memStr;
         fresh = true;
         rightShown = true;
         justEvaluated = false;
-        operator = '^';
-        previous = constValue(tokens[tokens.length - 3]);
+        operator = '×';
         expression = renderTokens();
         updateDisplay();
         return;
