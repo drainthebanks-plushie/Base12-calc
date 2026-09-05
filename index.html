@@ -725,6 +725,199 @@
     /* keep decorative elements away from controls */
     .corner-bl, .corner-br { display: none !important; }
 
+  
+    /* Reference-image palette: warm ivory / black / muted coastal accents */
+    :root {
+      --paper: #E8DFCD;
+      --paper-dark: #CFC3AE;
+      --ink: #171717;
+      --muted: #756B5E;
+
+      --formline-black: #202020;
+      --formline-red: #A75A4B;
+      --formline-teal: #5E8D8C;
+      --formline-cream: #EEE5D2;
+
+      --mustard: #C4A94F;
+      --sage: #729681;
+      --terra: #A75A4B;
+      --cobalt: #5C8588;
+      --gold: #B79D62;
+    }
+
+    html, body {
+      background: #181A1A;
+    }
+
+    body {
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.018) 25%, transparent 25%) 0 0/18px 18px,
+        linear-gradient(315deg, rgba(255,255,255,.012) 25%, transparent 25%) 0 0/18px 18px,
+        linear-gradient(180deg, #202323 0%, #151717 100%);
+    }
+
+    .calculator {
+      max-width: 425px;
+      border-color: #D2C6B2;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.22) 0 8%, transparent 8% 18%, rgba(120,100,70,.03) 18% 22%, transparent 22%),
+        repeating-linear-gradient(8deg, rgba(100,78,52,.025) 0 1px, transparent 1px 6px),
+        linear-gradient(90deg, rgba(95,75,48,.045), transparent 8%, transparent 92%, rgba(95,75,48,.045)),
+        linear-gradient(180deg, #EEE7D8 0%, #DFD4C1 100%);
+      box-shadow:
+        0 22px 54px rgba(0,0,0,.45),
+        inset 0 0 0 2px rgba(255,255,255,.42),
+        inset 0 0 0 6px rgba(166,144,111,.10);
+    }
+
+    .calculator::before,
+    .calculator::after {
+      border-color: #BDB3A2;
+      background:
+        repeating-linear-gradient(150deg,
+          #EEE5D2 0 12px,
+          #5E8D8C 12px 20px,
+          #EEE5D2 20px 28px,
+          #A75A4B 28px 36px,
+          #EEE5D2 36px 48px);
+      box-shadow: inset 0 0 0 1px rgba(60,55,48,.18);
+    }
+
+    .brand {
+      color: #171717;
+      border-color: #A69C8D;
+      background:
+        linear-gradient(135deg,
+          #A75A4B 0 7%,
+          #EEE5D2 7% 11%,
+          #5E8D8C 11% 17%,
+          #EEE5D2 17% 22%,
+          transparent 22% 78%,
+          #EEE5D2 78% 83%,
+          #5E8D8C 83% 89%,
+          #EEE5D2 89% 93%,
+          #A75A4B 93% 100%),
+        #E9E0CF;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.65),
+        0 2px 4px rgba(50,40,25,.12);
+      text-shadow: none;
+    }
+
+    .display {
+      border-color: #9B8E78;
+      background:
+        linear-gradient(110deg, transparent 0 43%, rgba(255,255,255,.035) 43% 57%, transparent 57%),
+        linear-gradient(180deg, #151817 0%, #0A0C0C 100%);
+      box-shadow:
+        inset 0 4px 14px rgba(0,0,0,.80),
+        0 0 0 3px #E5DDCE,
+        0 0 0 5px #B9AB93;
+    }
+
+    .display::before {
+      background: linear-gradient(90deg, transparent, rgba(223,207,174,.35), transparent);
+    }
+
+    .tape { color: #928A7D; }
+    .expression { color: #C5B99F; }
+    .main-display { color: #F1E8D6; }
+    .angle-flag, .ascii12, .mem-flag { color: #D3C09A; }
+
+    .mode {
+      background: #DED4C2;
+      border-color: #AFA18B;
+      box-shadow: 0 0 0 2px #EDE5D7;
+    }
+
+    .mode button {
+      color: #282421;
+      text-shadow: none;
+    }
+
+    .mode button.on {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.45), transparent 48%),
+        linear-gradient(135deg, #F1ECE1, #D8E0DC);
+      color: #171717;
+      box-shadow:
+        inset 0 0 0 1px rgba(95,123,122,.38),
+        0 1px 3px rgba(55,45,32,.10);
+    }
+
+    button {
+      border-color: #A99D8A;
+      background-color: #E9E0CD;
+      background-image:
+        linear-gradient(180deg, rgba(255,255,255,.35), transparent 42%),
+        repeating-linear-gradient(8deg, rgba(120,96,62,.02) 0 1px, transparent 1px 5px);
+      color: #181818;
+      box-shadow:
+        0 4px 0 #B7AA96,
+        0 7px 10px rgba(60,45,28,.16),
+        inset 0 0 0 1px rgba(255,255,255,.28);
+      text-shadow: none;
+    }
+
+    button:active {
+      box-shadow:
+        0 1px 0 #B7AA96,
+        inset 0 0 0 1px rgba(255,255,255,.20);
+    }
+
+    button.digit,
+    .calculator.arabic button.digit,
+    button.fn,
+    button.equals {
+      background-color: #E9E0CD !important;
+      background-image:
+        linear-gradient(180deg, rgba(255,255,255,.32), transparent 42%),
+        repeating-linear-gradient(8deg, rgba(120,96,62,.022) 0 1px, transparent 1px 5px) !important;
+      color: #181818 !important;
+      border-color: #A99D8A !important;
+      box-shadow:
+        0 4px 0 #B7AA96,
+        0 7px 10px rgba(60,45,28,.16),
+        inset 0 0 0 1px rgba(255,255,255,.28) !important;
+      text-shadow: none;
+    }
+
+    .c-mustard, .side-op[data-op="+"],
+    .calculator.adv #op4, .calculator:not(.adv) #op1, #sciTan {
+      background-color: #C4A94F !important;
+      color: #171717 !important;
+      border-color: #9B843B !important;
+      box-shadow: 0 4px 0 #8A7434, 0 7px 10px rgba(60,45,28,.15) !important;
+    }
+
+    .c-sage, .side-op[data-op="−"],
+    .calculator.adv #op1, .calculator:not(.adv) #op2 {
+      background-color: #729681 !important;
+      color: #17211D !important;
+      border-color: #557462 !important;
+      box-shadow: 0 4px 0 #4C6858, 0 7px 10px rgba(40,55,45,.16) !important;
+    }
+
+    .c-terra, .side-op[data-op="×"],
+    .calculator.adv #op2, .calculator:not(.adv) #op3, #sciSin {
+      background-color: #A75A4B !important;
+      color: #1A1513 !important;
+      border-color: #82453A !important;
+      box-shadow: 0 4px 0 #733D34, 0 7px 10px rgba(60,35,30,.17) !important;
+    }
+
+    .c-cobalt, .side-op[data-op="÷"], .calculator:not(.adv) #op4,
+    .calculator.adv #op3, #sciCos, #sciLog {
+      background-color: #5C8588 !important;
+      color: #142020 !important;
+      border-color: #42676A !important;
+      box-shadow: 0 4px 0 #39595B, 0 7px 10px rgba(32,50,52,.17) !important;
+    }
+
+    button.clear { color: #8A4038; }
+
+    .corner-bl, .corner-br { display: none !important; }
+
   </style>
 </head>
 <body>
